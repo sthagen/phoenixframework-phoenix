@@ -63,7 +63,7 @@ defmodule Phoenix.MixProject do
   defp deps do
     [
       {:plug, "~> 1.9"},
-      {:plug_crypto, "~> 1.1"},
+      {:plug_crypto, "~> 1.1.1 or ~> 1.2"},
       {:telemetry, "~> 0.4"},
       {:phoenix_pubsub, "~> 2.0-dev", github: "phoenixframework/phoenix_pubsub"},
 
@@ -119,10 +119,10 @@ defmodule Phoenix.MixProject do
       "guides/introduction/up_and_running.md",
       "guides/introduction/community.md",
 
+      "guides/directory_structure.md",
       "guides/request_lifecycle.md",
-      "guides/routing.md",
       "guides/plug.md",
-      "guides/endpoint.md",
+      "guides/routing.md",
       "guides/controllers.md",
       "guides/views.md",
       "guides/templates.md",
@@ -142,7 +142,8 @@ defmodule Phoenix.MixProject do
       "guides/deployment/releases.md",
       "guides/deployment/heroku.md",
 
-      "guides/howto/custom_error_pages.md"
+      "guides/howto/custom_error_pages.md",
+      "guides/howto/using_ssl.md",
     ]
   end
 
