@@ -6,7 +6,7 @@ defmodule Phoenix.MixProject do
   # If the elixir requirement is updated, we need to make the installer
   # use at least the minimum requirement used here. Although often the
   # installer is ahead of Phoenix itself.
-  @elixir_requirement "~> 1.6"
+  @elixir_requirement "~> 1.7"
 
   def project do
     [
@@ -55,7 +55,8 @@ defmodule Phoenix.MixProject do
         format_encoders: [],
         filter_parameters: ["password"],
         serve_endpoints: false,
-        gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf)
+        gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf),
+        trim_on_html_eex_engine: true
       ]
     ]
   end
