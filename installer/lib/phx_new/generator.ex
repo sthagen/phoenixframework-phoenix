@@ -110,6 +110,7 @@ defmodule Phx.New.Generator do
     db           = Keyword.get(opts, :database, "postgres")
     ecto         = Keyword.get(opts, :ecto, true)
     html         = Keyword.get(opts, :html, true)
+    live         = Keyword.get(opts, :live, false)
     gettext      = Keyword.get(opts, :gettext, true)
     webpack      = Keyword.get(opts, :webpack, true)
     dev          = Keyword.get(opts, :dev, false)
@@ -147,6 +148,7 @@ defmodule Phx.New.Generator do
       phoenix_path: phoenix_path,
       phoenix_webpack_path: phoenix_webpack_path(project, dev),
       phoenix_html_webpack_path: phoenix_html_webpack_path(project),
+      phoenix_live_view_webpack_path: phoenix_live_view_webpack_path(project),
       phoenix_static_path: phoenix_static_path(phoenix_path),
       pubsub_server: pubsub_server,
       secret_key_base: random_string(64),
@@ -156,6 +158,7 @@ defmodule Phx.New.Generator do
       webpack: webpack,
       ecto: ecto,
       html: html,
+      live: live,
       gettext: gettext,
       adapter_app: adapter_app,
       adapter_module: adapter_module,
@@ -286,8 +289,13 @@ defmodule Phx.New.Generator do
   defp phoenix_html_webpack_path(%Project{in_umbrella?: false}),
     do: "../deps/phoenix_html"
 
-  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> #{@phoenix_version}"}]
-  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
+  defp phoenix_live_view_webpack_path(%Project{in_umbrella?: true}),
+    do: "../../../deps/phoenix_live_view"
+  defp phoenix_live_view_webpack_path(%Project{in_umbrella?: false}),
+    do: "../deps/phoenix_live_view"
+
+  # defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, "~> #{@phoenix_version}"}]
+  defp phoenix_dep("deps/phoenix"), do: ~s[{:phoenix, github: "phoenixframework/phoenix", override: true}]
   defp phoenix_dep(path), do: ~s[{:phoenix, path: #{inspect path}, override: true}]
 
   defp phoenix_static_path("deps/phoenix"), do: "deps/phoenix"
