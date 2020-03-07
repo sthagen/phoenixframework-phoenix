@@ -43,7 +43,8 @@ defmodule <%= web_namespace %> do
 
   def live_view do
     quote do
-      use Phoenix.LiveView
+      use Phoenix.LiveView,
+        layout: {<%= web_namespace %>.LayoutView, "live.html"}
 
       unquote(view_helpers())
     end
@@ -72,21 +73,21 @@ defmodule <%= web_namespace %> do
       use Phoenix.Channel<%= if gettext do %>
       import <%= web_namespace %>.Gettext<% end %>
     end
-  end<%= if html do %>
+  end
 
   defp view_helpers do
-    quote do
+    quote do<%= if html do %>
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML<%= if live do %>
 
       # Import convenience functions for LiveView rendering
       import Phoenix.LiveView.Helpers<% end %>
-
+<% end %>
       import <%= web_namespace %>.ErrorHelpers<%= if gettext do %>
       import <%= web_namespace %>.Gettext<% end %>
       alias <%= web_namespace %>.Router.Helpers, as: Routes
     end
-  end<% end %>
+  end
 
   @doc """
   When used, dispatch to the appropriate controller/view/etc.

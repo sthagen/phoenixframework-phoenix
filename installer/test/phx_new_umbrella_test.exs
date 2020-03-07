@@ -264,6 +264,8 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_html")
       assert_file web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_reload")
+      assert_file web_path(@app, "lib/#{@app}_web.ex"),
+                  &assert(&1 =~ "defp view_helpers do")
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"),
                   &refute(&1 =~ ~r"Phoenix.LiveReloader")
       assert_file web_path(@app, "lib/#{@app}_web/endpoint.ex"),
@@ -340,8 +342,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file web_path(@app, "lib/phx_umb_web/router.ex"), fn file ->
         assert file =~ ~s[plug :fetch_live_flash]
         assert file =~ ~s[plug :put_root_layout, {PhxUmbWeb.LayoutView, :root}]
-        assert file =~ ~s[plug :put_live_layout, {PhxUmbWeb.LayoutView, :live}]
-        assert file =~ ~s[plug :put_layout, {PhxUmbWeb.LayoutView, :app}]
         assert file =~ ~s[live "/", PageLive]
         refute file =~ ~s[plug :fetch_flash]
         refute file =~ ~s[PageController]
