@@ -617,9 +617,10 @@ export class Channel {
     let handledPayload = this.onMessage(event, payload, ref, joinRef)
     if(payload && !handledPayload){ throw new Error("channel onMessage callbacks must return the payload, modified or unmodified") }
 
-    for (let i = 0; i < this.bindings.length; i++) {
-      const bind = this.bindings[i]
-      if(bind.event !== event){ continue }
+    let eventBindings = this.bindings.filter(bind => bind.event === event)
+
+    for (let i = 0; i < eventBindings.length; i++) {
+      let bind = eventBindings[i]
       bind.callback(handledPayload, ref, joinRef || this.joinRef())
     }
   }
@@ -1058,7 +1059,8 @@ export class Socket {
     return this.ref.toString()
   }
 
-  sendHeartbeat(){ if(!this.isConnected()){ return }
+  sendHeartbeat(){
+    if(!this.isConnected()){ return }
     if(this.pendingHeartbeatRef){
       this.pendingHeartbeatRef = null
       if (this.hasLogger()) this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
