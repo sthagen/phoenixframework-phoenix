@@ -1,7 +1,7 @@
 // We need to import the CSS so that webpack will load it.
 // The MiniCssExtractPlugin is used to separate it out into
 // its own CSS file.
-import "../css/app.css"
+import "../css/app.scss"
 
 // webpack automatically bundles all modules in your
 // entry points. Those entry points can be configured
@@ -17,8 +17,16 @@ import {Socket} from "phoenix"
 import NProgress from "nprogress"
 import {LiveSocket} from "phoenix_live_view"
 
-let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+// The _csrf_token is necessary to load the current session into the LiveView.
+// The _cache_static_manifest_hash is used to detect whenever there is a new
+// deploy and trigger a reload of the assets. The "PHOENIX_CACHE_STATIC_MANIFEST_HASH"
+// will be automatically replaced by a hash by running `mix phx.digest` in prod.
+let params = {
+  _csrf_token: document.querySelector("meta[name='csrf-token']").getAttribute("content"),
+  _cache_static_manifest_hash: "PHOENIX_CACHE_STATIC_MANIFEST_HASH"
+}
+
+let liveSocket = new LiveSocket("/live", Socket, {params: params})
 
 // Show progress bar on live navigation and form submits
 window.addEventListener("phx:page-loading-start", info => NProgress.start())

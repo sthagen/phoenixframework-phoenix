@@ -598,16 +598,10 @@ export class Channel {
   /**
    * @private
    */
-  sendJoin(timeout){
+  rejoin(timeout = this.timeout){ if(this.isLeaving()){ return }
+    this.socket.leaveOpenTopic(this.topic)
     this.state = CHANNEL_STATES.joining
     this.joinPush.resend(timeout)
-  }
-
-  /**
-   * @private
-   */
-  rejoin(timeout = this.timeout){ if(this.isLeaving()){ return }
-    this.sendJoin(timeout)
   }
 
   /**
@@ -920,7 +914,7 @@ export class Socket {
    * @private
    */
   onConnOpen(){
-    if (this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
+    if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
     this.unloaded = false
     this.closeWasClean = false
     this.flushSendBuffer()
@@ -940,12 +934,46 @@ export class Socket {
   }
 
   teardown(callback, code, reason){
-    if(this.conn){
-      this.conn.onclose = function(){} // noop
-      if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
-      this.conn = null
+    if (!this.conn) {
+      return callback && callback()
     }
-    callback && callback()
+
+    this.waitForBufferDone(() => {
+      if (this.conn) {
+        if(code){ this.conn.close(code, reason || "") } else { this.conn.close() }
+      }
+
+      this.waitForSocketClosed(() => {
+        if (this.conn) {
+          this.conn.onclose = function(){} // noop
+          this.conn = null
+        }
+
+        callback && callback()
+      })
+    })
+  }
+
+  waitForBufferDone(callback, tries = 1) {
+    if (tries === 5 || !this.conn || (this.conn.bufferedAmount && this.conn.bufferedAmount === 0)) {
+      callback()
+      return
+    }
+
+    setTimeout(() => {
+      this.waitForBufferDone(callback, tries + 1)
+    }, 150 * tries)
+  }
+
+  waitForSocketClosed(callback, tries = 1) {
+    if (tries === 5 || !this.conn || this.conn.readyState === SOCKET_STATES.closed) {
+      callback()
+      return
+    }
+
+    setTimeout(() => {
+      this.waitForSocketClosed(callback, tries + 1)
+    }, 150 * tries)
   }
 
   onConnClose(event){
@@ -1101,6 +1129,14 @@ export class Socket {
         callback(msg)
       }
     })
+  }
+
+  leaveOpenTopic(topic){
+    let dupChannel = this.channels.find(c => c.topic === topic && (c.isJoined() || c.isJoining()))
+    if(dupChannel){
+      if(this.hasLogger()) this.log("transport", `leaving duplicate topic "${topic}"`)
+      dupChannel.leave()
+    }
   }
 }
 

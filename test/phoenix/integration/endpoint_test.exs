@@ -12,19 +12,33 @@ defmodule Phoenix.Integration.EndpointTest do
     http: [port: "4807"], url: [host: "example.com"], server: true, drainer: false,
     render_errors: [accepts: ~w(html json)])
   Application.put_env(:endpoint_int, DevEndpoint,
-      http: [port: "4808"], debug_errors: true, drainer: false)
+    http: [port: "4808"], debug_errors: true, drainer: false)
 
-  if hd(Application.spec(:plug_cowboy, :vsn)) == ?1 do
-    # Cowboy v1
-    Application.put_env(:endpoint_int, ProdInet6Endpoint,
-      http: [{:port, "4809"}, :inet6],
-      url: [host: "example.com"], server: true)
-  else
-    # Cowboy v2
-    Application.put_env(:endpoint_int, ProdInet6Endpoint,
-      http: [port: "4809", transport_options: [socket_opts: [:inet6]]],
-      url: [host: "example.com"],
-      server: true)
+  Application.put_env(:endpoint_int, ProdInet6Endpoint,
+    http: [port: "4809", transport_options: [socket_opts: [:inet6]]],
+    url: [host: "example.com"],
+    server: true)
+
+  def attach_telemetry() do
+    unique_name = :"PID#{System.unique_integer()}"
+    Process.register(self(), unique_name)
+
+    for suffix <- [:start, :stop, :exception] do
+      :telemetry.attach(
+        {suffix, unique_name},
+        [:plug_adapter, :call, suffix],
+        fn event, measurements, metadata, :none ->
+          send(unique_name, {:event, event, measurements, metadata})
+        end,
+        :none
+      )
+    end
+
+    on_exit(fn ->
+      for suffix <- [:start, :stop, :exception] do
+        :telemetry.detach({suffix, unique_name})
+      end
+    end)
   end
 
   defmodule Router do
@@ -113,7 +127,6 @@ defmodule Phoenix.Integration.EndpointTest do
 
   alias Phoenix.Integration.HTTPClient
 
-  @tag :cowboy2
   test "starts drainer in supervision tree if configured" do
     capture_log fn ->
       {:ok, _} = ProdInet6Endpoint.start_link()
@@ -127,6 +140,8 @@ defmodule Phoenix.Integration.EndpointTest do
   end
 
   test "adapters starts on configured port and serves requests and stops for prod" do
+    attach_telemetry()
+
     capture_log fn ->
       # Has server: true
       {:ok, _} = ProdEndpoint.start_link()
@@ -135,6 +150,22 @@ defmodule Phoenix.Integration.EndpointTest do
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}", %{})
       assert resp.status == 200
       assert resp.body == "ok"
+
+      assert_receive {:event, [:plug_adapter, :call, :start], %{system_time: _},
+                      %{
+                        adapter: :phoenix_cowboy,
+                        conn: %{request_path: "/"},
+                        plug: ProdEndpoint
+                      }}
+
+      assert_receive {:event, [:plug_adapter, :call, :stop], %{duration: _},
+                      %{
+                        adapter: :phoenix_cowboy,
+                        conn: %{request_path: "/"},
+                        plug: ProdEndpoint
+                      }}
+
+      refute_received {:event, [:plug_adapter, :call, :exception], _, _}
 
       {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/unknown", %{})
       assert resp.status == 404
@@ -148,6 +179,23 @@ defmodule Phoenix.Integration.EndpointTest do
         {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/oops", %{})
         assert resp.status == 500
         assert resp.body == "500.html from Phoenix.ErrorView"
+
+        assert_receive {:event, [:plug_adapter, :call, :start], %{system_time: _},
+                        %{
+                          adapter: :phoenix_cowboy,
+                          conn: %{request_path: "/oops"},
+                          plug: ProdEndpoint
+                        }}
+
+        assert_receive {:event, [:plug_adapter, :call, :exception], %{duration: _},
+                        %{
+                          adapter: :phoenix_cowboy,
+                          conn: %{request_path: "/oops"},
+                          plug: ProdEndpoint,
+                          reason: %RuntimeError{}
+                        }}
+
+        refute_received {:event, [:plug_adapter, :call, :stop], _, _}
 
         {:ok, resp} = HTTPClient.request(:get, "http://127.0.0.1:#{@prod}/router/oops", %{})
         assert resp.status == 500

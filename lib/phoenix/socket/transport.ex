@@ -41,15 +41,18 @@ defmodule Phoenix.Socket.Transport do
   `c:handle_in/2` on the socket. For each informational message the
   transport receives, it should call `c:handle_info/2` on the socket.
 
+  Transports can optionally implement `c:handle_control/2` for handling
+  control frames such as `:ping` and `:pong`.
+
   On termination, `c:terminate/2` must be called. A special atom with
   reason `:closed` can be used to specify that the client terminated
   the connection.
 
   ## Example
 
-  Here is a simple pong socket implementation:
+  Here is a simple echo socket implementation:
 
-      defmodule PingSocket do
+      defmodule EchoSocket do
         @behaviour Phoenix.Socket.Transport
 
         def child_spec(opts) do
@@ -68,8 +71,8 @@ defmodule Phoenix.Socket.Transport do
           {:ok, state}
         end
 
-        def handle_in({"ping", _opts}, state) do
-          {:reply, :ok, {:text, "pong"}, state}
+        def handle_in({text, _opts}, state) do
+          {:reply, :ok, {:text, text}, state}
         end
 
         def handle_info(_, state) do
@@ -83,7 +86,7 @@ defmodule Phoenix.Socket.Transport do
 
   It can be mounted in your endpoint like any other socket:
 
-      socket "/socket", PingSocket, websocket: true, longpoll: true
+      socket "/socket", EchoSocket, websocket: true, longpoll: true
 
   You can now interact with the socket under `/socket/websocket`
   and `/socket/longpoll`.
@@ -178,6 +181,29 @@ defmodule Phoenix.Socket.Transport do
               | {:stop, reason :: term, state}
 
   @doc """
+  Handles incoming control frames.
+
+  The message is represented as `{payload, options}`. It must
+  return one of:
+
+    * `{:ok, state}` - continues the socket with no reply
+    * `{:reply, status, reply, state}` - continues the socket with reply
+    * `{:stop, reason, state}` - stops the socket
+
+  Control frames only supported when using websockets.
+
+  The `options` contains an `opcode` key, this will be either `:ping` or
+  `:pong`.
+
+  If a control frame doesn't have a payload, then the payload value
+  will be `nil`.
+  """
+  @callback handle_control({message :: term, opts :: keyword}, state) ::
+              {:ok, state}
+              | {:reply, :ok | :error, {opcode :: atom, message :: term}, state}
+              | {:stop, reason :: term, state}
+
+  @doc """
   Handles info messages.
 
   The message is a term. It must return one of:
@@ -205,6 +231,8 @@ defmodule Phoenix.Socket.Transport do
   """
   @callback terminate(reason :: term, state) :: :ok
 
+  @optional_callbacks handle_control: 2
+
   require Logger
 
   @doc false
@@ -212,14 +240,15 @@ defmodule Phoenix.Socket.Transport do
     do: module.default_config()
 
   def load_config(config, module),
-    do: module.default_config() |> Keyword.merge(config) |> validate_config()
+    do: module.default_config() |> Keyword.merge(config) |> load_config()
 
-  defp validate_config(config) do
+  @doc false
+  def load_config(config) do
     {connect_info, config} = Keyword.pop(config, :connect_info, [])
 
     connect_info =
       Enum.map(connect_info, fn
-        key when key in [:peer_data, :uri, :x_headers] ->
+        key when key in [:peer_data, :uri, :user_agent, :x_headers] ->
           key
 
         {:session, session} ->
@@ -244,16 +273,8 @@ defmodule Phoenix.Socket.Transport do
     {key, store, init}
   end
 
-  defp init_session({module, function, arguments})  do
-    case apply(module, function, arguments) do
-      session_config when is_list(session_config) ->
-        init_session(session_config)
-
-      session_config ->
-        raise ArgumentError,
-          "invalid MFA session_config return #{inspect session_config}. " <>
-            "When session_config is a MFA, it's expected that it will return a keyword list same as the argument given to `Plug.Session`"
-    end
+  defp init_session({_, _, _} = mfa)  do
+    {:mfa, mfa}
   end
 
   @doc """
@@ -410,8 +431,12 @@ defmodule Phoenix.Socket.Transport do
   The supported keys are:
 
     * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
+
     * `:x_headers` - a list of all request headers that have an "x-" prefix
+
     * `:uri` - a `%URI{}` derived from the conn
+
+    * `:user_agent` - the value of the "user-agent" request header
 
   """
   def connect_info(conn, endpoint, keys) do
@@ -426,23 +451,41 @@ defmodule Phoenix.Socket.Transport do
         :uri ->
           {:uri, fetch_uri(conn)}
 
-        {:session, {key, store, store_config}} ->
-          conn = Plug.Conn.fetch_cookies(conn)
+        :user_agent ->
+          {:user_agent, fetch_user_agent(conn)}
 
-          with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
-               cookie when is_binary(cookie) <- conn.cookies[key],
-               conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
-               {_, session} <- store.get(conn, cookie, store_config),
-               csrf_state when is_binary(csrf_state) <- Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
-               true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
-            {:session, session}
-          else
-            _ -> {:session, nil}
-          end
+        {:session, session} ->
+          {:session, connect_session(conn, endpoint, session)}
 
         {key, val} ->
           {key, val}
       end
+    end
+  end
+
+  defp connect_session(conn, endpoint, {key, store, store_config}) do
+    conn = Plug.Conn.fetch_cookies(conn)
+
+    with csrf_token when is_binary(csrf_token) <- conn.params["_csrf_token"],
+         cookie when is_binary(cookie) <- conn.cookies[key],
+         conn = put_in(conn.secret_key_base, endpoint.config(:secret_key_base)),
+         {_, session} <- store.get(conn, cookie, store_config),
+         csrf_state when is_binary(csrf_state) <- Plug.CSRFProtection.dump_state_from_session(session["_csrf_token"]),
+         true <- Plug.CSRFProtection.valid_state_and_csrf_token?(csrf_state, csrf_token) do
+      session
+    else
+      _ -> nil
+    end
+  end
+
+  defp connect_session(conn, endpoint, {:mfa, {module, function, args}}) do
+    case apply(module, function, args) do
+      session_config when is_list(session_config) ->
+        connect_session(conn, endpoint, init_session(session_config))
+
+      other ->
+        raise ArgumentError,
+          "the MFA given to `session_config` must return a keyword list, got: #{inspect other}"
     end
   end
 
@@ -483,15 +526,21 @@ defmodule Phoenix.Socket.Transport do
         do: pair
   end
 
-  defp fetch_uri(%{host: host, scheme: scheme, query_string: query_string, port: port, request_path: request_path}) do
+  defp fetch_uri(conn) do
     %URI{
-      scheme: to_string(scheme),
-      query: query_string,
-      port: port,
-      host: host,
-      authority: host,
-      path: request_path,
+      scheme: to_string(conn.scheme),
+      query: conn.query_string,
+      port: conn.port,
+      host: conn.host,
+      authority: conn.host,
+      path: conn.request_path
     }
+  end
+
+  defp fetch_user_agent(conn) do
+    with {_, value} <- List.keyfind(conn.req_headers, "user-agent", 0) do
+      value
+    end
   end
 
   defp check_origin_config(handler, endpoint, opts) do

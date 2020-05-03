@@ -97,11 +97,11 @@ The buildpack uses a predefined Elixir and Erlang version but to avoid surprises
 
 ```
 # Elixir version
-elixir_version=1.8.1
+elixir_version=1.10.3
 
 # Erlang version
 # available versions https://github.com/HashNuke/heroku-buildpack-elixir-otp-builds/blob/master/otp-versions
-erlang_version=21.2.5
+erlang_version=22.2.8
 ```
 
 ### Adding the Phoenix Server and Assets Buildpack
@@ -115,14 +115,11 @@ Buildpack added. Next release on mysterious-meadow-6277 will use:
   2. https://github.com/gjaldon/heroku-buildpack-phoenix-static.git
 ```
 
-The Phoenix Static buildpack uses a predefined Node and NPM version but to avoid surprises when deploying, it is best to explicitly list the Node and NPM version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `phoenix_static_buildpack.config` in the root directory of your project with your target version of Node and NPM:
+The Phoenix Static buildpack uses a predefined Node version but to avoid surprises when deploying, it is best to explicitly list the Node version we want in production to be the same we are using during development or in your continuous integration servers. This is done by creating a config file named `phoenix_static_buildpack.config` in the root directory of your project with your target version of Node:
 
 ```
 # Node version
-node_version=10.15.3
-
-# NPM version
-npm_version=6.14.2
+node_version=10.20.1
 ```
 
 Please refer to the [configuration section](https://github.com/gjaldon/heroku-buildpack-phoenix-static#configuration) for full details. You can make your own custom build script, but for now we will use the [default one provided](https://github.com/gjaldon/heroku-buildpack-phoenix-static/blob/master/compile).
@@ -355,7 +352,7 @@ build:
 
 ### Setup releases and Dockerfile
 
-Now we need to define a `Dockerfile` at the root folder of your project that contains your application. We recommend to use releases when doing so, as the release will allow us to build a container with only the parts of Erlang and Elixir we actually use. Follow [the releases docs](/releases.html). At the end of the guide, there is a sample Dockerfile file you can use.
+Now we need to define a `Dockerfile` at the root folder of your project that contains your application. We recommend to use releases when doing so, as the release will allow us to build a container with only the parts of Erlang and Elixir we actually use. Follow [the releases docs](releases.html). At the end of the guide, there is a sample Dockerfile file you can use.
 
 Once you have the image definition setup, you can push your app to heroku and you can see it starts building the image and deploy it.
 

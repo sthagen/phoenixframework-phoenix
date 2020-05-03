@@ -241,18 +241,17 @@ defmodule Phoenix.ChannelTest do
   end
 
   @doc false
+  @deprecated "Phoenix.ChannelTest.socket/0 is deprecated, please call socket/1 instead"
   defmacro socket() do
-    IO.warn "Phoenix.ChannelTest.socket/0 is deprecated, please call socket/1 instead"
     build_socket(nil, nil, [], __CALLER__)
   end
 
   @doc false
+  @deprecated "Phoenix.ChannelTest.socket/2 is deprecated, please call socket/3 instead"
   defmacro socket(id, assigns) do
-    IO.warn "Phoenix.ChannelTest.socket/2 is deprecated, please call socket/3 instead"
     build_socket(nil, id, assigns, __CALLER__)
   end
 
-  # TODO: Remove this when Cowboy 1 adapter is removed
   defp first_socket!(endpoint) do
     case endpoint.__sockets__ do
       [] -> raise ArgumentError, "#{inspect endpoint} has no socket declaration"
@@ -405,7 +404,7 @@ defmodule Phoenix.ChannelTest do
 
   """
   @spec push(Socket.t, String.t, map()) :: reference()
-  def push(socket, event, payload \\ %{}) do
+  def push(%Socket{} = socket, event, payload \\ %{}) do
     ref = make_ref()
     send(socket.channel_pid,
          %Message{event: event, topic: socket.topic, ref: ref, payload: __stringify__(payload)})
@@ -416,7 +415,7 @@ defmodule Phoenix.ChannelTest do
   Emulates the client leaving the channel.
   """
   @spec leave(Socket.t) :: reference()
-  def leave(socket) do
+  def leave(%Socket{} = socket) do
     push(socket, "phx_leave", %{})
   end
 
@@ -426,7 +425,7 @@ defmodule Phoenix.ChannelTest do
   Closing socket is synchronous and has a default timeout
   of 5000 milliseconds.
   """
-  def close(socket, timeout \\ 5000) do
+  def close(%Socket{} = socket, timeout \\ 5000) do
     Server.close(socket.channel_pid, timeout)
   end
 
@@ -442,7 +441,7 @@ defmodule Phoenix.ChannelTest do
       :ok
 
   """
-  def broadcast_from(socket, event, message) do
+  def broadcast_from(%Socket{} = socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
     Server.broadcast_from pubsub_server, transport_pid, topic, event, message
   end
@@ -450,7 +449,7 @@ defmodule Phoenix.ChannelTest do
   @doc """
   Same as `broadcast_from/3`, but raises if broadcast fails.
   """
-  def broadcast_from!(socket, event, message) do
+  def broadcast_from!(%Socket{} = socket, event, message) do
     %{pubsub_server: pubsub_server, topic: topic, transport_pid: transport_pid} = socket
     Server.broadcast_from! pubsub_server, transport_pid, topic, event, message
   end

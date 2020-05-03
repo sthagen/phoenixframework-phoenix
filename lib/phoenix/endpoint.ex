@@ -99,9 +99,13 @@ defmodule Phoenix.Endpoint do
     * `:cache_static_manifest` - a path to a json manifest file that contains
       static files and their digested version. This is typically set to
       "priv/static/cache_manifest.json" which is the file automatically generated
-      by `mix phx.digest`.
-      It can be either: a string containing a file system path or a tuple containing
-      the application name and the path within that application.
+      by `mix phx.digest`. It can be either: a string containing a file system path
+      or a tuple containing the application name and the path within that application.
+
+    * `:cache_static_manifest_hash` - the hash of the cache static manifest.
+      This is automatically loaded from `cache_static_manifest` on boot.
+      However, if you have your own static handling mechanism, you may want to
+      set this value explicitly.
 
     * `:check_origin` - configure the default `:check_origin` setting for
       transports. See `socket/3` for options. Defaults to `true`.
@@ -289,6 +293,16 @@ defmodule Phoenix.Endpoint do
   Generates a two item tuple containing the `static_path` and `static_integrity`.
   """
   @callback static_lookup(path :: String.t) :: {String.t, String.t} | {String.t, nil}
+
+  @doc """
+  Returns the script name from the :url configuration.
+  """
+  @callback script_name() :: [String.t]
+
+  @doc """
+  Returns the host from the :url configuration.
+  """
+  @callback host() :: String.t
 
   # Channels
 
@@ -704,8 +718,6 @@ defmodule Phoenix.Endpoint do
       socket "/ws/:user_id", MyApp.UserSocket,
         websocket: [path: "/project/:project_id"]
 
-  Note: This feature is not supported with the Cowboy 1 adapter.
-
   ## Common configuration
 
   The configuration below can be given to both `:websocket` and
@@ -756,8 +768,13 @@ defmodule Phoenix.Endpoint do
       The valid keys are:
 
         * `:peer_data` - the result of `Plug.Conn.get_peer_data/1`
+
         * `:x_headers` - all request headers that have an "x-" prefix
+
         * `:uri` - a `%URI{}` with information from the conn
+
+        * `:user_agent` - the value of the "user-agent" request header
+
         * `{:session, session_config}` - the session information from `Plug.Conn`.
           The `session_config` is an exact copy of the arguments given to `Plug.Session`.
           This requires the "_csrf_token" to be given as request parameter with
@@ -790,8 +807,8 @@ defmodule Phoenix.Endpoint do
     * `:timeout` - the timeout for keeping websocket connections
       open after it last received data, defaults to 60_000ms
 
-    * `:max_frame_size` - the maximum allowed frame size in bytes.
-      Supported from Cowboy 2.3 onwards, defaults to "infinity"
+    * `:max_frame_size` - the maximum allowed frame size in bytes,
+      defaults to "infinity"
 
     * `:compress` - whether to enable per message compression on
       all data frames, defaults to false
@@ -831,10 +848,8 @@ defmodule Phoenix.Endpoint do
   end
 
   @doc false
+  @deprecated "Phoenix.Endpoint.instrument/4 is deprecated and has no effect. Use :telemetry instead"
   defmacro instrument(_endpoint_or_conn_or_socket, _event, _runtime, _fun) do
-    IO.warn "Phoenix.Endpoint.instrument/4 is deprecated and has no effect. Use :telemetry instead",
-            Macro.Env.stacktrace(__CALLER__)
-
     :ok
   end
 

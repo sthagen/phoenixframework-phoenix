@@ -1,7 +1,7 @@
 defmodule Phx.New.MixProject do
   use Mix.Project
 
-  @version "1.5.0-dev"
+  @version "1.5.0"
   @github_path "phoenixframework/phoenix"
   @url "https://github.com/#{@github_path}"
 
@@ -10,7 +10,7 @@ defmodule Phx.New.MixProject do
       app: :phx_new,
       start_permanent: Mix.env() == :prod,
       version: @version,
-      elixir: "~> 1.7",
+      elixir: "~> 1.9",
       deps: deps(),
       package: [
         maintainers: [

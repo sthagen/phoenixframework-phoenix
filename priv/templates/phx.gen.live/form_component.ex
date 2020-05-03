@@ -1,8 +1,9 @@
-defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.Form do
+defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web_namespace, schema.alias) %>Live.FormComponent do
   use <%= inspect context.web_module %>, :live_component
 
   alias <%= inspect context.module %>
 
+  @impl true
   def update(%{<%= schema.singular %>: <%= schema.singular %>} = assigns, socket) do
     changeset = <%= inspect context.alias %>.change_<%= schema.singular %>(<%= schema.singular %>)
 
@@ -12,6 +13,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
      |> assign(:changeset, changeset)}
   end
 
+  @impl true
   def handle_event("validate", %{"<%= schema.singular %>" => <%= schema.singular %>_params}, socket) do
     changeset =
       socket.assigns.<%= schema.singular %>

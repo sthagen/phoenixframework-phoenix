@@ -126,15 +126,15 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     live_subdir = "#{schema.singular}_live"
 
     [
-      {:eex, "show.ex",         Path.join([web_prefix, "live", web_path, live_subdir, "show.ex"])},
-      {:eex, "index.ex",        Path.join([web_prefix, "live", web_path, live_subdir, "index.ex"])},
-      {:eex, "form.ex",         Path.join([web_prefix, "live", web_path, live_subdir, "form.ex"])},
-      {:eex, "form.html.leex",  Path.join([web_prefix, "live", web_path, live_subdir, "form.html.leex"])},
-      {:eex, "index.html.leex", Path.join([web_prefix, "live", web_path, live_subdir, "index.html.leex"])},
-      {:eex, "show.html.leex",  Path.join([web_prefix, "live", web_path, live_subdir, "show.html.leex"])},
-      {:eex, "live_test.exs",   Path.join([test_prefix, "live", web_path, "#{schema.singular}_live_test.exs"])},
-      {:new_eex, "modal.ex",        Path.join([web_prefix, "live", "modal.ex"])},
-      {:new_eex, "live_helpers.ex", Path.join([web_prefix, "live", "live_helpers.ex"])},
+      {:eex, "show.ex",                   Path.join([web_prefix, "live", web_path, live_subdir, "show.ex"])},
+      {:eex, "index.ex",                  Path.join([web_prefix, "live", web_path, live_subdir, "index.ex"])},
+      {:eex, "form_component.ex",         Path.join([web_prefix, "live", web_path, live_subdir, "form_component.ex"])},
+      {:eex, "form_component.html.leex",  Path.join([web_prefix, "live", web_path, live_subdir, "form_component.html.leex"])},
+      {:eex, "index.html.leex",           Path.join([web_prefix, "live", web_path, live_subdir, "index.html.leex"])},
+      {:eex, "show.html.leex",            Path.join([web_prefix, "live", web_path, live_subdir, "show.html.leex"])},
+      {:eex, "live_test.exs",             Path.join([test_prefix, "live", web_path, "#{schema.singular}_live_test.exs"])},
+      {:new_eex, "modal_component.ex",    Path.join([web_prefix, "live", "modal_component.ex"])},
+      {:new_eex, "live_helpers.ex",       Path.join([web_prefix, "live", "live_helpers.ex"])},
     ]
   end
 
@@ -171,19 +171,16 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     else
       Mix.shell().info """
 
-      Add your #{inspect(context.web_module)}.LiveHelpers import to your view_helpers block in #{file_path}:
+      Could not find Phoenix.LiveView.Helpers imported in #{file_path}.
 
-          defp view_helpers do
-            quote do
-              # Use all HTML functionality (forms, tags, etc)
-              use Phoenix.HTML
+      This typically happens because your application was not generated
+      with the --live flag:
 
-              # Import convenience functions for LiveView rendering
-              import Phoenix.LiveView.Helpers
-              #{inject}
-              ...
-            end
-          end
+          mix phx.new my_app --live
+
+      Please make sure LiveView is installed and that #{inspect(context.web_module)}
+      defines both `live_view/0` and `live_component/0` functions,
+      and that both functions import #{inspect(context.web_module)}.LiveHelpers.
       """
     end
   end

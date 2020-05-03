@@ -22,6 +22,8 @@ There are a number of places to connect with community members at all experience
 
   * [Programming Phoenix 1.4 (by Bruce Tate and Phoenix core team members Chris McCord and José Valim - Dec 2019)](https://pragprog.com/book/phoenix14/programming-phoenix-1-4)
 
+  * [Real-Time Phoenix - Build Highly Scalable Systems with Channels (by Stephen Bussey - 2020)](https://pragprog.com/book/sbsockets/real-time-phoenix)
+
   * [Phoenix Inside Out - Book Series (by Shankar Dhanasekaran - July 2017)](https://shankardevy.com/phoenix-book/)
 
   * [Functional Web Development with Elixir, OTP, and Phoenix Rethink the Modern Web App (by Lance Halvorsen - Oct 2017)](https://pragprog.com/book/lhelph/functional-web-development-with-elixir-otp-and-phoenix)
@@ -29,6 +31,8 @@ There are a number of places to connect with community members at all experience
   * [Phoenix in Action (by Geoffrey Lessel - 2017)](https://manning.com/books/phoenix-in-action)
 
 ## Screencasts/Courses
+
+  * [Phoenix LiveView Free Course (The Pragmatic Studio - May 2020)](https://pragmaticstudio.com/courses/phoenix-liveview)
 
   * [The Complete Elixir and Phoenix Bootcamp Master Functional Programming Techniques with Elixir and Phoenix while Learning to Build Compelling Web Applications (Udemy - Jun 2017)](https://www.udemy.com/the-complete-elixir-and-phoenix-bootcamp-and-tutorial/)
 

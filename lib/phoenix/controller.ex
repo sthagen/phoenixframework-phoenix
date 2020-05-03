@@ -460,9 +460,7 @@ defmodule Phoenix.Controller do
   Retrieves the current view.
   """
   @spec view_module(Plug.Conn.t) :: atom
-  def view_module(conn) do
-    conn.private.phoenix_view
-  end
+  def view_module(conn), do: conn.private.phoenix_view
 
   @doc """
   Stores the layout for rendering.
@@ -757,19 +755,7 @@ defmodule Phoenix.Controller do
     render(conn, view, template, [])
   end
 
-  @doc """
-  WARNING: This function is deprecated in favor of `render/3` + `put_view/2`.
-
-  A shortcut that renders the given template in the given view.
-
-  Equivalent to:
-
-      conn
-      |> put_view(view)
-      |> render(template, assigns)
-
-  """
-  @spec render(Plug.Conn.t, atom, atom | binary, Keyword.t | map) :: Plug.Conn.t
+  @doc false
   def render(conn, view, template, assigns)
       when is_atom(view) and (is_binary(template) or is_atom(template)) do
     IO.warn "#{__MODULE__}.render/4 with a view is deprecated, see the documentation for render/3 for an alternative"
@@ -808,6 +794,7 @@ defmodule Phoenix.Controller do
 
   defp prepare_assigns(conn, assigns, template, format) do
     assigns = to_map(assigns)
+
     layout =
       case layout(conn, assigns, format) do
         {mod, layout} -> {mod, template_name(layout, format)}
@@ -1169,6 +1156,14 @@ defmodule Phoenix.Controller do
   "_format" parameter is available, this function will parse
   the "accept" header and find a matching format accordingly.
 
+  This function is useful when you may want to serve different
+  content-types (such as JSON and HTML) from the same routes.
+  However, if you always have distinct routes, you can also
+  disable content negotiation and simply hardcode your format
+  of choice in your route pipelines:
+
+      plug :put_format, "html"
+
   It is important to notice that browsers have historically
   sent bad accept headers. For this reason, this function will
   default to "html" format whenever:
@@ -1414,7 +1409,7 @@ defmodule Phoenix.Controller do
   end
 
   @doc """
-  Returns a message from flash by `key`.
+  Returns a message from flash by `key` (or `nil` if no message is available for `key`).
 
   ## Examples
 

@@ -4,43 +4,43 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
   alias <%= inspect context.module %>
   alias <%= inspect schema.module %>
 
+  @impl true
   def mount(_params, _session, socket) do
-    {:ok, socket}
+    {:ok, assign(socket, :<%= schema.collection %>, list_<%= schema.plural %>())}
   end
 
+  @impl true
   def handle_params(params, _url, socket) do
-    {:noreply, handle_action(socket.assigns.live_action, params, socket)}
+    {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  defp handle_action(:edit, %{"id" => id}, socket) do
+  defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit <%= schema.human_singular %>")
     |> assign(:<%= schema.singular %>, <%= inspect context.alias %>.get_<%= schema.singular %>!(id))
-    |> assign_new(:<%= schema.plural %>, &fetch_<%= schema.plural %>/0)
   end
 
-  defp handle_action(:new, _params, socket) do
+  defp apply_action(socket, :new, _params) do
     socket
     |> assign(:page_title, "New <%= schema.human_singular %>")
     |> assign(:<%= schema.singular %>, %<%= inspect schema.alias %>{})
-    |> assign_new(:<%= schema.plural %>, &fetch_<%= schema.plural %>/0)
   end
 
-  defp handle_action(:index, _params, socket) do
+  defp apply_action(socket, :index, _params) do
     socket
     |> assign(:page_title, "Listing <%= schema.human_plural %>")
     |> assign(:<%= schema.singular %>, nil)
-    |> assign(:<%= schema.plural %>, fetch_<%= schema.plural %>())
   end
 
+  @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     <%= schema.singular %> = <%= inspect context.alias %>.get_<%= schema.singular %>!(id)
     {:ok, _} = <%= inspect context.alias %>.delete_<%= schema.singular %>(<%= schema.singular %>)
 
-    {:noreply, assign(socket, :<%= schema.plural %>, fetch_<%=schema.plural %>())}
+    {:noreply, assign(socket, :<%= schema.collection %>, list_<%=schema.plural %>())}
   end
 
-  defp fetch_<%= schema.plural %> do
+  defp list_<%= schema.plural %> do
     <%= inspect context.alias %>.list_<%= schema.plural %>()
   end
 end

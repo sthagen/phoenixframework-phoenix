@@ -52,8 +52,8 @@ defmodule Mix.Tasks.Phx.New do
     * `--verbose` - use verbose output
 
   When passing the `--no-ecto` flag, Phoenix generators such as
-  `phx.gen.html`, `phx.gen.json` and `phx.gen.context` may no
-  longer work as expected as they generate context files that rely
+  `phx.gen.html`, `phx.gen.json`, `phx.gen.live`, and `phx.gen.context`
+  may no longer work as expected as they generate context files that rely
   on Ecto for the database access. In those cases, you can pass the
   `--no-context` flag to generate most of the HTML and JSON files
   but skip the context, allowing you to fill in the blanks as desired.
@@ -147,8 +147,8 @@ defmodule Mix.Tasks.Phx.New do
     project
   end
 
-  defp prompt_to_install_deps(%Project{} = project, generator, path) do
-    path = Map.fetch!(project, path)
+  defp prompt_to_install_deps(%Project{} = project, generator, path_key) do
+    path = Map.fetch!(project, path_key)
     install? = Mix.shell().yes?("\nFetch and install dependencies?")
     cd_step = ["$ cd #{relative_app_path(path)}"]
 
@@ -172,6 +172,17 @@ defmodule Mix.Tasks.Phx.New do
 
       if Project.ecto?(project) do
         print_ecto_info(generator)
+      end
+
+      if path_key == :web_path do
+        Mix.shell().info("""
+        Your web app requires a PubSub server to be running.
+        The PubSub server is typically defined in a `mix phx.gen.ecto` app.
+        If you don't plan to define an Ecto app, you must explicitly start
+        the PubSub in your supervision tree as:
+
+            {Phoenix.PubSub, name: #{inspect(project.app_mod)}.PubSub}}
+        """)
       end
 
       print_mix_info(generator)
@@ -339,8 +350,8 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version(), "~> 1.7") do
-      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.7.\n " <>
+    unless Version.match?(System.version(), "~> 1.9") do
+      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.9.\n " <>
                 "You have #{System.version()}. Please update accordingly"
     end
   end

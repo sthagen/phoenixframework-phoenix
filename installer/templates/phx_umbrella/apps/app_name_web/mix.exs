@@ -9,7 +9,7 @@ defmodule <%= web_namespace %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.7",
+      elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix<%= if gettext do %>, :gettext<% end %>] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
@@ -38,12 +38,12 @@ defmodule <%= web_namespace %>.MixProject do
   defp deps do
     [
       <%= phoenix_dep %>,<%= if ecto do %>
-      {:phoenix_ecto, "~> 4.0"},<% end %><%= if html do %><%= if live do %>
-      {:phoenix_live_view, "~> 0.10.0"},
-      {:floki, ">= 0.0.0", only: :test},<% end %><%= if dashboard do %>
-      {:phoenix_live_dashboard, github: "phoenixframework/phoenix_live_dashboard"},<% end %>
+      {:phoenix_ecto, "~> 4.1"},<% end %><%= if html do %><%= if live do %>
+      {:phoenix_live_view, "~> 0.12.0"},
+      {:floki, ">= 0.0.0", only: :test},<% end %>
       {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %>
+      {:phoenix_live_reload, "~> 1.2", only: :dev},<% end %><%= if dashboard do %>
+      {:phoenix_live_dashboard, "~> 0.2.0"},<% end %>
       {:telemetry_metrics, "~> 0.4"},
       {:telemetry_poller, "~> 0.4"},<%= if gettext do %>
       {:gettext, "~> 0.11"},<% end %><%= if app_name != web_app_name do %>
@@ -53,11 +53,13 @@ defmodule <%= web_namespace %>.MixProject do
     ]
   end
 
-  # Aliases are shortcuts or tasks specific to the current project.<%= if ecto do %>
-  # For example, we extend the test task to create and migrate the database.<% end %>
+  # Aliases are shortcuts or tasks specific to the current project.
   #
   # See the documentation for `Mix` for more info on aliases.
   defp aliases do
-    [<%= if ecto do %>test: ["ecto.create --quiet", "ecto.migrate", "test"]<% end %>]
+    [
+      setup: ["deps.get"<%= if webpack do %>, "cmd npm install --prefix assets"<% end %>]<%= if ecto do %>,
+      test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %>
+    ]
   end
 end

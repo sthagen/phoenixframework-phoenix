@@ -50,7 +50,7 @@ end
 
 When we reload our home page, we should see our new title. Since templates are compiled inside the view, we could invoke the view function simply as `title()`, otherwise we would have to type `HelloWeb.LayoutView.title()`.
 
-As you may recall, Elixir templates use Embedded Elixir, known as `EEx`. We use `<%= expression %>` to execute Elixir expressions. The result of the expression is interpolated into the template. You can use pretty much use any Elixir expression. For example, in order to have conditionals:
+As you may recall, Elixir templates use Embedded Elixir, known as `EEx`. We use `<%= expression %>` to execute Elixir expressions. The result of the expression is interpolated into the template. You can use pretty much any Elixir expression. For example, in order to have conditionals:
 
 ```html
 <%= if some_condition? do %>
@@ -98,7 +98,7 @@ end
 Now if you fire up the server with `mix phx.server` and visit `http://localhost:4000`, you should see the following text below your layout header instead of the main template page:
 
 ```console
-rendering with assigns [:conn, :view_module, :view_template]
+rendering with assigns [:conn]
 ```
 
 By defining our own clause in `render`, it takes higher priority than the template, but the template is still there, which you can verify by simply removing the newly added clause.
@@ -172,7 +172,7 @@ Layouts are just templates. They have a view, just like other templates. In a ne
 <%= @inner_content %>
 ```
 
-In other words, the inner template is placed in the `@inner_content` assign. You can also find which module and template where used to render the inner content by introspecting the `@view_module` and `@view_template` assigns.
+In other words, the inner template is placed in the `@inner_content` assign.
 
 ## Rendering JSON
 
@@ -180,7 +180,7 @@ The view's job is not only to render HTML templates. Views are about data presen
 
 Phoenix uses [Jason](https://github.com/michalmuskala/jason) to encode JSON, so all we need to do in our views is format the data we'd like to respond with as a list or a map, and Phoenix will do the rest.
 
-While it is possible to respond with JSON back directly from the controller and skip the view, Phoenix Views provide a much more strucgtured approach for doing  so. Let's take our `PageController`, and see what it might look like when we respond with some static page maps as JSON, instead of HTML.
+While it is possible to respond with JSON back directly from the controller and skip the view, Phoenix Views provide a much more structured approach for doing  so. Let's take our `PageController`, and see what it might look like when we respond with some static page maps as JSON, instead of HTML.
 
 ```elixir
 defmodule HelloWeb.PageController do

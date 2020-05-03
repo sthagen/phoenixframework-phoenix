@@ -50,7 +50,7 @@ defmodule Phx.New.Single do
 
   template :live, [
     {:eex, "phx_live/templates/layout/root.html.leex",       :project, "lib/:lib_web_name/templates/layout/root.html.leex"},
-    {:eex, "phx_live/templates/layout/app.html.leex",        :project, "lib/:lib_web_name/templates/layout/app.html.leex"},
+    {:eex, "phx_live/templates/layout/app.html.leex",        :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
     {:eex, "phx_live/templates/layout/live.html.leex",       :project, "lib/:lib_web_name/templates/layout/live.html.leex"},
     {:eex, "phx_web/views/layout_view.ex",                   :project, "lib/:lib_web_name/views/layout_view.ex"},
     {:eex, "phx_live/live/page_live.ex",                     :project, "lib/:lib_web_name/live/page_live.ex"},
@@ -71,7 +71,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
     {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
+    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
     {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
@@ -81,7 +81,7 @@ defmodule Phx.New.Single do
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
     {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
-    {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
+    {:eex,  "phx_assets/app.scss",          :web, "assets/css/app.scss"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
     {:keep, "phx_assets/vendor",            :web, "assets/vendor"},
   ]
