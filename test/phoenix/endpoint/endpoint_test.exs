@@ -10,6 +10,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
            force_ssl: [subdomains: true],
            cache_static_manifest: "../../../../test/fixtures/digest/compile/cache_manifest.json",
            pubsub_server: :endpoint_pub]
+
   Application.put_env(:phoenix, __MODULE__.Endpoint, @config)
 
   defmodule Endpoint do
@@ -95,14 +96,16 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   test "warms up caches on load and config change" do
-    assert Endpoint.config(:cache_static_manifest_hash) == "cjkuB6uDZecddGSFz7D7kg"
+    assert Endpoint.config(:cache_static_manifest_latest) ==
+             %{"foo.css" => "foo-d978852bea6530fcd197b5445ed008fd.css"}
+
     assert Endpoint.static_path("/foo.css") == "/foo-d978852bea6530fcd197b5445ed008fd.css?vsn=d"
 
     # Trigger a config change and the cache should be warmed up again
     config = put_in(@config[:cache_static_manifest], "../../../../test/fixtures/digest/compile/cache_manifest_upgrade.json")
 
     assert Endpoint.config_change([{Endpoint, config}], []) == :ok
-    assert Endpoint.config(:cache_static_manifest_hash) == "3xAzpSnmcgte3bMevWqJMA"
+    assert Endpoint.config(:cache_static_manifest_latest) == %{"foo.css" => "foo-ghijkl.css"}
     assert Endpoint.static_path("/foo.css") == "/foo-ghijkl.css?vsn=d"
   end
 
@@ -144,7 +147,7 @@ defmodule Phoenix.Endpoint.EndpointTest do
   end
 
   test "injects pubsub broadcast with configured server" do
-    Phoenix.PubSub.subscribe(:endpoint_pub, "sometopic")
+    Endpoint.subscribe("sometopic")
     some = spawn fn -> :ok end
 
     Endpoint.broadcast_from(some, "sometopic", "event1", %{key: :val})

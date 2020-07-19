@@ -22,10 +22,11 @@ defmodule Phoenix.Channel.Server do
 
     ref = make_ref()
     from = {self(), ref}
-    child_spec = channel.child_spec({payload, from, socket})
+    child_spec = channel.child_spec({socket.endpoint, from})
 
     case PoolSupervisor.start_child(socket.endpoint, socket.handler, from, child_spec) do
       {:ok, pid} ->
+        send(pid, {Phoenix.Channel, payload, from, socket})
         mon_ref = Process.monitor(pid)
 
         receive do
@@ -254,10 +255,8 @@ defmodule Phoenix.Channel.Server do
   ## Callbacks
 
   @doc false
-  def init({auth_payload, from, socket}) do
-    # TODO: Use handle_continue when we support Erlang/OTP 21+.
-    send(self(), {:join, __MODULE__})
-    {:ok, {auth_payload, from, socket}}
+  def init({_endpoint, {pid, _}}) do
+    {:ok, Process.monitor(pid)}
   end
 
   @doc false
@@ -285,7 +284,8 @@ defmodule Phoenix.Channel.Server do
   end
 
   @doc false
-  def handle_info({:join, __MODULE__}, {auth_payload, {pid, _} = from, socket}) do
+  def handle_info({Phoenix.Channel, auth_payload, {pid, _} = from, socket}, ref) do
+    Process.demonitor(ref)
     %{channel: channel, topic: topic, private: private} = socket
     Process.put(:"$callers", [pid])
 
@@ -327,6 +327,10 @@ defmodule Phoenix.Channel.Server do
     event
     |> socket.channel.handle_out(payload, socket)
     |> handle_result(:handle_out)
+  end
+
+  def handle_info({:DOWN, ref, _, _, reason}, ref) do
+    {:stop, reason, ref}
   end
 
   def handle_info({:DOWN, _, _, transport_pid, reason}, %{transport_pid: transport_pid} = socket) do
@@ -395,8 +399,23 @@ defmodule Phoenix.Channel.Server do
 
   defp init_join(socket, channel, topic) do
     %{transport_pid: transport_pid, serializer: serializer, pubsub_server: pubsub_server} = socket
-    Process.monitor(transport_pid)
 
+    unless pubsub_server do
+      raise """
+      The :pubsub_server was not configured for endpoint #{inspect(socket.endpoint)}.
+      Make sure to start a PubSub process in your application supervision tree:
+
+          {Phoenix.PubSub, [name: YOURAPP.PubSub, adapter: Phoenix.PubSub.PG2]}
+
+      And then add it to your endpoint config:
+
+          config :YOURAPP, YOURAPPWeb.Endpoint,
+            # ...
+            pubsub_server: YOURAPP.PubSub
+      """
+    end
+
+    Process.monitor(transport_pid)
     fastlane = {:fastlane, transport_pid, serializer, channel.__intercepts__()}
     PubSub.subscribe(pubsub_server, topic, metadata: fastlane)
 

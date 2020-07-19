@@ -46,7 +46,7 @@ defmodule Phoenix.MixProject do
   def application do
     [
       mod: {Phoenix, []},
-      extra_applications: [:logger, :eex, :crypto],
+      extra_applications: [:logger, :eex, :crypto, :public_key],
       env: [
         logger: true,
         stacktrace_depth: nil,
@@ -55,6 +55,7 @@ defmodule Phoenix.MixProject do
         filter_parameters: ["password"],
         serve_endpoints: false,
         gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf),
+        static_compressors: [Phoenix.Digester.Gzip],
         trim_on_html_eex_engine: true
       ]
     ]
@@ -73,12 +74,12 @@ defmodule Phoenix.MixProject do
       {:phoenix_html, "~> 2.14.2 or ~> 2.15", optional: true},
 
       # Docs dependencies
-      {:ex_doc, "~> 0.20", only: :docs},
+      {:ex_doc, "~> 0.22", only: :docs},
       {:inch_ex, "~> 0.2", only: :docs},
 
-      # Test dependencies
-      {:gettext, "~> 0.15.0", only: :test},
-      {:telemetry_poller, "~> 0.4", only: :test},
+      # Test dependencies (some also include :docs for cross references)
+      {:gettext, "~> 0.15.0", only: [:docs, :test]},
+      {:telemetry_poller, "~> 0.4", only: [:docs, :test]},
       {:telemetry_metrics, "~> 0.4", only: [:docs, :test]},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
@@ -132,6 +133,7 @@ defmodule Phoenix.MixProject do
       "guides/testing/testing_channels.md",
       "guides/deployment/deployment.md",
       "guides/deployment/releases.md",
+      "guides/deployment/gigalixir.md",
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
       "guides/howto/using_ssl.md"

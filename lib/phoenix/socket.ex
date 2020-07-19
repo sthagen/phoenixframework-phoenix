@@ -129,9 +129,14 @@ defmodule Phoenix.Socket do
   ## Custom channels
 
   You can list any module as a channel as long as it implements
-  a `start_link/1` function that receives a tuple with three elements:
+  a `child_spec/1` function. The `child_spec/1` function receives
+  the caller as argument and it must return a child spec that
+  initializes a process.
 
-      {auth_payload, from, socket}
+  Once the process is initialized, it will receive the following
+  message:
+
+      {Phoenix.Channel, auth_payload, from, socket}
 
   A custom channel implementation MUST invoke
   `GenServer.reply(from, {:ok | :error, reply_payload})` during its
@@ -174,11 +179,6 @@ defmodule Phoenix.Socket do
   Custom channel implementations cannot be tested with `Phoenix.ChannelTest`
   and are currently considered experimental. The underlying API may be
   changed at any moment.
-
-  **Note:** in future Phoenix versions we will require custom channels
-  to provide a custom `child_spec/1` function instead of `start_link/1`.
-  Since the default behaviour of `child_spec/1` is to invoke `start_link/1`,
-  this behaviour should be backwards compatible in almost all cases.
   """
 
   require Logger
@@ -203,8 +203,8 @@ defmodule Phoenix.Socket do
   See `Phoenix.Token` documentation for examples in
   performing token verification on connect.
   """
-  @callback connect(params :: map, Socket.t) :: {:ok, Socket.t} | :error
-  @callback connect(params :: map, Socket.t, connect_info :: map) :: {:ok, Socket.t} | :error
+  @callback connect(params :: map, Socket.t) :: {:ok, Socket.t} | {:error, term} | :error
+  @callback connect(params :: map, Socket.t, connect_info :: map) :: {:ok, Socket.t} | {:error, term} | :error
 
   @doc ~S"""
   Identifies the socket connection.
@@ -456,6 +456,7 @@ defmodule Phoenix.Socket do
 
   defp result({:ok, _}), do: :ok
   defp result(:error), do: :error
+  defp result({:error, _}), do: :error
 
   def __init__({state, %{id: id, endpoint: endpoint} = socket}) do
     _ = id && endpoint.subscribe(id, link: true)
@@ -533,34 +534,15 @@ defmodule Phoenix.Socket do
   end
 
   defp user_connect(handler, endpoint, transport, serializer, params, connect_info) do
-    if pubsub_server = endpoint.config(:pubsub_server) do
-      # The information in the Phoenix.Socket goes to userland and channels.
-      socket = %Socket{
-        handler: handler,
-        endpoint: endpoint,
-        pubsub_server: pubsub_server,
-        serializer: serializer,
-        transport: transport
-      }
+    # The information in the Phoenix.Socket goes to userland and channels.
+    socket = %Socket{
+      handler: handler,
+      endpoint: endpoint,
+      pubsub_server: endpoint.config(:pubsub_server),
+      serializer: serializer,
+      transport: transport
+    }
 
-      user_connect(handler, params, socket, connect_info)
-    else
-      Logger.error """
-      The :pubsub_server was not configured for endpoint #{inspect(endpoint)}.
-      Make sure to start a PubSub proccess in your application supervision tree:
-
-          {Phoenix.PubSub, [name: YOURAPP.PubSub, adapter: Phoenix.PubSub.PG2]}
-
-      And then list it your endpoint config:
-
-          pubsub_server: YOURAPP.PubSub
-      """
-
-      :error
-    end
-  end
-
-  defp user_connect(handler, params, socket, connect_info) do
     # The information in the state is kept only inside the socket process.
     state = %{
       channels: %{},
@@ -592,10 +574,13 @@ defmodule Phoenix.Socket do
       :error ->
         :error
 
+      {:error, _reason} = err ->
+        err
+
       invalid ->
         connect_arity = if function_exported?(handler, :connect, 3), do: "connect/3", else: "connect/2"
         Logger.error "#{inspect handler}. #{connect_arity} returned invalid value #{inspect invalid}. " <>
-                     "Expected {:ok, socket} or :error"
+                     "Expected {:ok, socket}, {:error, reason} or :error"
         :error
     end
   end

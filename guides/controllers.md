@@ -125,7 +125,7 @@ def show(conn, %{"messenger" => messenger}) do
 end
 ```
 
-Hitting `/hello/Frank` now renders the HTML string we defined in the `show` action. Note that what we wrote in the action is not an `eex` template. It's a multi-line string, so we interpolate the `id` variable like this `#{id}`, instead of this `<%= id %>`.
+Hitting `/hello/Frank` now renders the HTML string we defined in the `show` action. Note that what we wrote in the action is not an `eex` template. It's a multi-line string, so we interpolate the `messenger` variable like this `#{messenger}`, instead of this `<%= messenger %>`.
 
 It is worth noting that the `text/2`, `json/2`, and `html/2` functions require neither a Phoenix view, nor a template to render.
 
@@ -194,7 +194,7 @@ def index(conn, _params) do
 end
 ```
 
-After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or css styling at all.
+After reloading [http://localhost:4000/](http://localhost:4000/), we should see a very different page, one with no title, logo image, or CSS styling at all.
 
 Now let's actually create another layout and render the index template into it. As an example, let's say we had a different layout for the admin section of our application which didn't have the logo image. To do this, let's copy the existing `app.html.eex` to a new file `admin.html.eex` in the same directory `lib/hello_web/templates/layout`. Then let's remove the line in `admin.html.eex` that displays the logo.
 
@@ -427,7 +427,7 @@ The flash functionality is handy when mixed with redirects. Perhaps you want to 
   end
 ```
 
-Now if you reload the Welcome page, you will be redirect and the flash messages will be shown once more.
+Now if you reload the Welcome page, you will be redirected and the flash messages will be shown once more.
 
 Besides `put_flash/3` and `get_flash/2`, the `Phoenix.Controller` module has another useful function worth knowing about. `clear_flash/1` takes only `conn` and removes any flash messages which might be stored in the session.
 

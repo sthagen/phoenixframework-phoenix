@@ -102,10 +102,11 @@ defmodule Phoenix.Endpoint do
       by `mix phx.digest`. It can be either: a string containing a file system path
       or a tuple containing the application name and the path within that application.
 
-    * `:cache_static_manifest_hash` - the hash of the cache static manifest.
-      This is automatically loaded from `cache_static_manifest` on boot.
-      However, if you have your own static handling mechanism, you may want to
-      set this value explicitly.
+    * `:cache_static_manifest_latest` - a map of the static files pointing to their
+      digest version. This is automatically loaded from `cache_static_manifest` on
+      boot. However, if you have your own static handling mechanism, you may want to
+      set this value explicitly. This is used by projects such as `LiveView` to
+      detect if the client is running on the latest version of all assets
 
     * `:check_origin` - configure the default `:check_origin` setting for
       transports. See `socket/3` for options. Defaults to `true`.
@@ -201,7 +202,7 @@ defmodule Phoenix.Endpoint do
 
     * `:drainer` - a drainer process that triggers when your application is
       shutting to wait for any on-going request to finish. It accepts all
-      options as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.httml).
+      options as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
       Defaults to `[]` and can be disabled by setting it to false.
 
   ## Endpoint API
@@ -378,12 +379,10 @@ defmodule Phoenix.Endpoint do
 
   defp pubsub() do
     quote do
-      @deprecated "#{inspect(__MODULE__)}.subscribe/2 is deprecated, please call Phoenix.PubSub directly instead"
       def subscribe(topic, opts \\ []) when is_binary(topic) do
-        Phoenix.PubSub.subscribe(pubsub_server!(), topic, [])
+        Phoenix.PubSub.subscribe(pubsub_server!(), topic, opts)
       end
 
-      @deprecated "#{inspect(__MODULE__)}.unsubscribe/1 is deprecated, please call Phoenix.PubSub directly instead"
       def unsubscribe(topic) do
         Phoenix.PubSub.unsubscribe(pubsub_server!(), topic)
       end
@@ -689,12 +688,12 @@ defmodule Phoenix.Endpoint do
 
     * `:websocket` - controls the websocket configuration.
       Defaults to `true`. May be false or a keyword list
-      of options. See "Shared configuration" and
+      of options. See "Common configuration" and
       "WebSocket configuration" for the whole list
 
     * `:longpoll` - controls the longpoll configuration.
       Defaults to `false`. May be true or a keyword list
-      of options. See "Shared configuration" and
+      of options. See "Common configuration" and
       "Longpoll configuration" for the whole list
 
   If your socket is implemented using `Phoenix.Socket`,
@@ -819,6 +818,18 @@ defmodule Phoenix.Endpoint do
       For example:
 
           subprotocols: ["sip", "mqtt"]
+
+    * `:error_handler` - custom error handler for connection errors.
+      If `c:Phoenix.Socket.connect/3` returns an `{:error, reason}` tuple,
+      the error handler will be called with the error reason. For WebSockets,
+      the error handler must be a MFA tuple that receives a `Plug.Conn`, the
+      error reason, and returns a `Plug.Conn` with a response. For example:
+
+          error_handler: {MySocket, :handle_error, []}
+
+      and a `{:error, :rate_limit}` return may be handled on `MySocket` as:
+
+          def handle_error(conn, :rate_limit), do: Plug.Conn.send_resp(conn, 429, "Too many requests")
 
   ## Longpoll configuration
 

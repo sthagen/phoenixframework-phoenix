@@ -503,6 +503,16 @@ export class Channel {
   canPush(){ return this.socket.isConnected() && this.isJoined() }
 
   /**
+   * Sends a message `event` to phoenix with the payload `payload`.
+   * Phoenix receives this in the `handle_in(event, payload, socket)`
+   * function. if phoenix replies or it times out (default 10000ms),
+   * then optionally the reply can be received.
+   *
+   * @example
+   * channel.push("event")
+   *   .receive("ok", payload => console.log("phoenix replied:", payload))
+   *   .receive("error", err => console.log("phoenix errored", err))
+   *   .receive("timeout", () => console.log("timed out pushing"))
    * @param {string} event
    * @param {Object} payload
    * @param {number} [timeout]
@@ -530,7 +540,7 @@ export class Channel {
    *
    * Triggers onClose() hooks
    *
-   * To receive leave acknowledgements, use the a `receive`
+   * To receive leave acknowledgements, use the `receive`
    * hook to bind to the server ack, ie:
    *
    * @example
@@ -955,7 +965,7 @@ export class Socket {
   }
 
   waitForBufferDone(callback, tries = 1) {
-    if (tries === 5 || !this.conn || (this.conn.bufferedAmount && this.conn.bufferedAmount === 0)) {
+    if (tries === 5 || !this.conn || !this.conn.bufferedAmount) {
       callback()
       return
     }

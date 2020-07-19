@@ -14,7 +14,7 @@ This gave us a number of modules for free, including a PostController and the as
 
 ## HTML controller tests
 
-If you open up "test/hello_web/controllers/post_controller.exs", you will find the following:
+If you open up "test/hello_web/controllers/post_controller_test.exs", you will find the following:
 
 ```elixir
 defmodule HelloWeb.PostControllerTest do
@@ -34,7 +34,7 @@ defmodule HelloWeb.PostControllerTest do
   ...
 ```
 
-Similar to the `PageControllerTest` that shops with our application, this controller tests uses `use HelloWeb.ConnCase` to setup the testing structure. Then, as usual, it defines some aliases, some module attributes to use throughout testing, and then it starts a series of `describe` blocks, each of them to test a different controller action.
+Similar to the `PageControllerTest` that ships with our application, this controller tests uses `use HelloWeb.ConnCase` to setup the testing structure. Then, as usual, it defines some aliases, some module attributes to use throughout testing, and then it starts a series of `describe` blocks, each of them to test a different controller action.
 
 ### The index action
 
@@ -47,11 +47,11 @@ def index(conn, _params) do
 end
 ```
 
-It gets all posts and renders the "index.html" template. The template can be found in "lib/hello_web/templates/page/index.html.eex".
+It gets all posts and renders the "index.html" template. The template can be found in `lib/hello_web/templates/page/index.html.eex`.
 
 The test looks like this:
 
-```elixi
+```elixir
 describe "index" do
   test "lists all posts", %{conn: conn} do
     conn = get(conn, Routes.post_path(conn, :index))
@@ -238,7 +238,7 @@ You may have noticed that this time the scaffold controller has generated fewer 
 resources "/articles", ArticleController, except: [:new, :edit]
 ```
 
-`new` and `edit` are only necessary for HTML because they basically exist to assist users in creating and updating resources. Besides having less actions, we will the controller and view tests and implementations for JSON are drastically different from the HTML ones.
+`new` and `edit` are only necessary for HTML because they basically exist to assist users in creating and updating resources. Besides having less actions, we will notice the controller and view tests and implementations for JSON are drastically different from the HTML ones.
 
 The only thing that is pretty much the same between HTML and JSON is the contexts and the schema, which, once you think about it, it makes total sense. After all, your business logic should remain the same, regardless if you are exposing it as HTML or JSON.
 
@@ -386,7 +386,7 @@ The `action_fallback` can be extremely useful to reduce boilerplate when designi
 
 ### The `delete` action
 
-Finally, the last action we will stidy is the `delete` action for JSON. Its implementation looks like this:
+Finally, the last action we will study is the `delete` action for JSON. Its implementation looks like this:
 
 ```elixir
 def delete(conn, %{"id" => id}) do

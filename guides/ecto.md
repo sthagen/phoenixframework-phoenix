@@ -454,7 +454,7 @@ This will set up all the correct dependencies and configuration for us automatic
 
 If we have an existing application, all we need to do is switch adapters and make some small configuration changes.
 
-To switch adapters, we need to remove the Postgrex dependency and add a new one for Mariaex instead.
+To switch adapters, we need to remove the Postgrex dependency and add a new one for Myxql instead.
 
 Let's open up our `mix.exs` file and do that now.
 
@@ -470,7 +470,7 @@ defmodule HelloPhoenix.MixProject do
     [
       {:phoenix, "~> 1.4.0"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.4"},
+      {:ecto_sql, "~> 3.4.4"},
       {:myxql, ">= 0.0.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

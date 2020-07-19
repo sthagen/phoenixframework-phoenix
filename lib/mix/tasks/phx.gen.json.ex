@@ -81,7 +81,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
   @doc false
   def run(args) do
     if Mix.Project.umbrella?() do
-      Mix.raise "mix phx.gen.json can only be run inside an application directory"
+      Mix.raise "mix phx.gen.json must be invoked from within your *_web application root directory"
     end
 
     {context, schema} = Gen.Context.build(args)
@@ -141,7 +141,7 @@ defmodule Mix.Tasks.Phx.Gen.Json do
 
       Add the resource to your #{schema.web_namespace} :api scope in #{Mix.Phoenix.web_path(ctx_app)}/router.ex:
 
-          scope "/#{schema.web_path}", #{inspect Module.concat(context.web_module, schema.web_namespace)} do
+          scope "/#{schema.web_path}", #{inspect Module.concat(context.web_module, schema.web_namespace)}, as: :#{schema.web_path} do
             pipe_through :api
             ...
             resources "/#{schema.plural}", #{inspect schema.alias}Controller

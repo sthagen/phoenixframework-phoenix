@@ -4,7 +4,7 @@
 
 > **Requirement**: This guide expects that you have gone through [the Introduction to Testing guide](testing.html).
 
-> **Requirement**: This guide expects that you have gone through [the Context guide](context.html).
+> **Requirement**: This guide expects that you have gone through [the Contexts guide](contexts.html).
 
 At the end of the Introduction to Testing guide, we generated an HTML resource for posts using the following command:
 
@@ -66,13 +66,13 @@ As the top of the file we import `Hello.DataCase`, which as we will see soon, it
 
 Next we define an alias, so we can refer to `Hello.Blog` simply as `Blog`.
 
-Then we start a `describe "posts"` block. A `describe` block is a feature in ExUnit that allows us to group similar tests. The reason why we have grouped all post related tests together is because contexts in Phoenix are capable of grouping multiple schemas together. For example, if you ran this command:
+Then we start a `describe "posts"` block. A `describe` block is a feature in ExUnit that allows us to group similar tests. The reason why we have grouped all post related tests together is because contexts in Phoenix are capable of grouping multiple schemas together. For example, if we ran this command:
 
 ```console
 $ mix phx.gen.html Blog Comment comments post_id:references:posts body:text
 ```
 
-We will would get a bunch of new functions in the `Hello.Blog` context plus a whole new `describe "comments"` block in our test file.
+We will get a bunch of new functions in the `Hello.Blog` context plus a whole new `describe "comments"` block in our test file.
 
 The tests defined for our context are very straight-forward. They call the functions in our context and assert on their results. As you can see, some of those tests even create entries in the database:
 
@@ -106,12 +106,8 @@ defmodule Hello.DataCase do
   end
 
   setup tags do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Hello.Repo)
-
-    unless tags[:async] do
-      Ecto.Adapters.SQL.Sandbox.mode(Hello.Repo, {:shared, self()})
-    end
-
+    pid = Ecto.Adapters.SQL.Sandbox.start_owner!(Demo.Repo, shared: not tags[:async])
+    on_exit(fn -> Ecto.Adapters.SQL.Sandbox.stop_owner(pid) end)
     :ok
   end
 
@@ -162,7 +158,7 @@ defmodule Hello.Blog.PostTest do
   alias Hello.Blog.Post
 
   test "title must be at least two characters long" do
-    changeset = Post.changeset(%User{}, %{title: "I"})
+    changeset = Post.changeset(%Post{}, %{title: "I"})
     assert %{title: ["should be at least 2 character(s)"]} = errors_on(changeset)
   end
 end

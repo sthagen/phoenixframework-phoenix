@@ -7,24 +7,6 @@ defmodule Phoenix.Logger do
   Phoenix uses the `:telemetry` library for instrumentation. The following events
   are published by Phoenix with the following measurements and metadata:
 
-    * `[:plug_adapter, :call, :start]` - dispatched by Phoenix integration with Cowboy,
-      this includes all requests, such as assets and web socket connections
-      * Measurement: `%{system_time: system_time}`
-      * Metadata: `%{conn: Plug.Conn.t, plug: endpoint}`
-      * Disable logging: not logged by default
-
-    * `[:plug_adapter, :call, :stop]` - dispatched by Phoenix integration with Cowboy,
-      whenever your endpoint finishes processing successfully
-      * Measurement: `%{duration: native_time}`
-      * Metadata: `%{conn: Plug.Conn.t, plug: endpoint}`
-      * Disable logging: not logged by default
-
-    * `[:plug_adapter, :call, :exception]` - dispatched by Phoenix integration with Cowboy,
-      whenever there are errors
-      * Measurement: `%{duration: native_time}`
-      * Metadata: `%{conn: Plug.Conn.t, plug: endpoint, kind: kind, reason: reason, stacktrace: stacktrace}`
-      * Disable logging: not logged by default
-
     * `[:phoenix, :endpoint, :start]` - dispatched by `Plug.Telemetry` in your endpoint,
       usually after code reloading
       * Measurement: `%{system_time: system_time}`
@@ -59,7 +41,7 @@ defmodule Phoenix.Logger do
 
     * `[:phoenix, :error_rendered]` - dispatched at the end of an error view being rendered
       * Measurement: `%{duration: native_time}`
-      * Metadata: `%{status: Plug.Conn.status, kind: Exception.kind, reason: term, stacktrace: Exception.stacktrace}`
+      * Metadata: `%{conn: Plug.Conn.t, status: Plug.Conn.status, kind: Exception.kind, reason: term, stacktrace: Exception.stacktrace}`
       * Disable logging: Set `render_errors: [log: false]` on your endpoint configuration
 
     * `[:phoenix, :socket_connected]` - dispatched by `Phoenix.Socket`, at the end of a socket connection
@@ -69,7 +51,7 @@ defmodule Phoenix.Logger do
 
     * `[:phoenix, :channel_joined]` - dispatched at the end of a channel join
       * Measurement: `%{duration: native_time}`
-      * Metadata: `%{params: term, socket: Phoenix.Socket.t}`
+      * Metadata: `%{result: :ok | :error, params: term, socket: Phoenix.Socket.t}`
       * Disable logging: This event cannot be disabled
 
     * `[:phoenix, :channel_handled_in]` - dispatched at the end of a channel handle in

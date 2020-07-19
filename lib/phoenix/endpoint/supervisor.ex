@@ -285,10 +285,9 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp build_url(endpoint, url) do
-    build_url(endpoint.config(:https), endpoint.config(:http), url)
-  end
+    https = endpoint.config(:https)
+    http  = endpoint.config(:http)
 
-  defp build_url(https, http, url) do
     {scheme, port} =
       cond do
         https ->
@@ -302,6 +301,10 @@ defmodule Phoenix.Endpoint.Supervisor do
     scheme = url[:scheme] || scheme
     host   = host_to_binary(url[:host] || "localhost")
     port   = port_to_integer(url[:port] || port)
+
+    if host =~ ":" do
+      Logger.warn("url: [host: ...] configuration value #{inspect(host)} for #{inspect(endpoint)} is invalid")
+    end
 
     %URI{scheme: scheme, port: port, host: host}
   end
@@ -374,9 +377,9 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp warmup_url(endpoint) do
-    endpoint.url
-    endpoint.static_url
-    endpoint.struct_url
+    endpoint.url()
+    endpoint.static_url()
+    endpoint.struct_url()
   end
 
   defp warmup_static(endpoint) do
@@ -384,8 +387,8 @@ defmodule Phoenix.Endpoint.Supervisor do
     endpoint.static_path("/")
   end
 
-  defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests} = manifest) do
-    Phoenix.Config.put_new(endpoint, :cache_static_manifest_hash, manifest["hash"])
+  defp warmup_static(endpoint, %{"latest" => latest, "digests" => digests}) do
+    Phoenix.Config.put_new(endpoint, :cache_static_manifest_latest, latest)
 
     Enum.each(latest, fn {key, _} ->
       Phoenix.Config.cache(endpoint, {:__phoenix_static__, "/" <> key}, fn _ ->
