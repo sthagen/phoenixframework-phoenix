@@ -285,6 +285,26 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
     end
   end
 
+  test "with --no-context does not emit warning when context exists", config do
+    in_tmp_live_project config.test, fn ->
+      Gen.Live.run(~w(Blog Post posts title:string))
+
+      assert_file "lib/phoenix/blog.ex"
+      assert_file "lib/phoenix/blog/post.ex"
+
+      Gen.Live.run(~w(Blog Comment comments title:string --no-context))
+      refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
+
+      assert_file "lib/phoenix_web/live/comment_live/index.ex"
+      assert_file "lib/phoenix_web/live/comment_live/show.ex"
+      assert_file "lib/phoenix_web/live/comment_live/form_component.ex"
+
+      assert_file "lib/phoenix_web/live/comment_live/index.html.leex"
+      assert_file "lib/phoenix_web/live/comment_live/show.html.leex"
+      assert_file "lib/phoenix_web/live/comment_live/form_component.html.leex"
+      assert_file "test/phoenix_web/live/comment_live_test.exs"
+    end
+  end
 
   test "with same singular and plural", config do
     in_tmp_live_project config.test, fn ->
@@ -308,6 +328,20 @@ defmodule Mix.Tasks.Phx.Gen.LiveTest do
       assert_file "lib/phoenix_web/live/series_live/show.html.leex"
       assert_file "lib/phoenix_web/live/series_live/form_component.html.leex"
       assert_file "test/phoenix_web/live/series_live_test.exs"
+    end
+  end
+
+  test "when more than 50 attributes are given", config do
+    in_tmp_live_project config.test, fn ->
+      long_attribute_list = 0..55 |> Enum.map(&("attribute#{&1}:string")) |> Enum.join(" ")
+      Gen.Live.run(~w(Blog Post posts title #{long_attribute_list}))
+
+      assert_file "test/phoenix/blog_test.exs", fn file ->
+        refute file =~ "...}"
+      end
+      assert_file "test/phoenix_web/live/post_live_test.exs", fn file ->
+        refute file =~ "...}"
+      end
     end
   end
 

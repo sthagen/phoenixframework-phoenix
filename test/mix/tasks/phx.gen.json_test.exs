@@ -35,6 +35,16 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
   end
 
   test "generates json resource", config do
+    one_day_in_seconds = 24 * 3600
+
+    naive_datetime =
+      %{NaiveDateTime.utc_now() | second: 0, microsecond: {0, 6}}
+      |> NaiveDateTime.add(-one_day_in_seconds)
+
+    datetime = 
+      %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
+      |> DateTime.add(-one_day_in_seconds)
+
     in_tmp_project config.test, fn ->
      Gen.Json.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
                      tags:array:text popular:boolean drafted_at:datetime
@@ -58,20 +68,19 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.PostControllerTest"
         assert file =~ """
-
               assert %{
                        "id" => id,
                        "alarm" => "14:00:00",
                        "alarm_usec" => "14:00:00.000000",
-                       "announcement_date" => "2010-04-17",
+                       "announcement_date" => "#{Date.add(Date.utc_today(), -1)}",
                        "cost" => "120.5",
-                       "deleted_at" => "2010-04-17T14:00:00",
-                       "deleted_at_usec" => "2010-04-17T14:00:00.000000",
-                       "drafted_at" => "2010-04-17T14:00:00",
+                       "deleted_at" => "#{naive_datetime |> NaiveDateTime.truncate(:second) |> NaiveDateTime.to_iso8601()}",
+                       "deleted_at_usec" => "#{NaiveDateTime.to_iso8601(naive_datetime)}",
+                       "drafted_at" => "#{datetime |> NaiveDateTime.truncate(:second) |> NaiveDateTime.to_iso8601()}",
                        "params" => %{},
                        "popular" => true,
-                       "published_at" => "2010-04-17T14:00:00Z",
-                       "published_at_usec" => "2010-04-17T14:00:00.000000Z",
+                       "published_at" => "#{datetime |> DateTime.truncate(:second) |> DateTime.to_iso8601()}",
+                       "published_at_usec" => "#{DateTime.to_iso8601(datetime)}",
                        "secret" => "7488a646-e31f-11e4-aace-600308960662",
                        "slug" => "some slug",
                        "tags" => [],
@@ -105,6 +114,17 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
           resources "/posts", PostController, except: [:new, :edit]
       """]}
+    end
+  end
+
+  test "when more than 50 arguments are given", config do
+    in_tmp_project config.test, fn ->
+      long_attribute_list = 0..55 |> Enum.map(&("attribute#{&1}:string")) |> Enum.join(" ")
+      Gen.Json.run(~w(Blog Post posts #{long_attribute_list}))
+
+      assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+        refute file =~ "...}"
+      end
     end
   end
 
@@ -147,6 +167,31 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       refute_file "lib/phoenix/blog.ex"
       refute_file "lib/phoenix/blog/comment.ex"
       assert Path.wildcard("priv/repo/migrations/*.exs") == []
+
+      assert_file "test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentControllerTest"
+      end
+
+      assert_file "lib/phoenix_web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentController"
+        assert file =~ "use PhoenixWeb, :controller"
+      end
+
+      assert_file "lib/phoenix_web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentView"
+      end
+    end
+  end
+
+  test "with --no-context no warning is emitted when context exists", config do
+    in_tmp_project config.test, fn ->
+      Gen.Json.run(~w(Blog Post posts title:string))
+
+      assert_file "lib/phoenix/blog.ex"
+      assert_file "lib/phoenix/blog/post.ex"
+
+      Gen.Json.run(~w(Blog Comment comments title:string --no-context))
+      refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
 
       assert_file "test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
         assert file =~ "defmodule PhoenixWeb.CommentControllerTest"

@@ -27,6 +27,8 @@ Elixir code compiles to Erlang byte code to run on the Erlang virtual machine. W
 
 When we install Elixir using instructions from the Elixir [Installation Page](https://elixir-lang.org/install.html),  we will usually get Erlang too. If Erlang was not installed along with Elixir, please see the [Erlang Instructions](https://elixir-lang.org/install.html#installing-erlang) section of the Elixir Installation Page for instructions.
 
+> A note about Erlang and Phoenix: while Phoenix itself only requires Erlang 20 or later, one of Phoenix's dependencies, [cowboy](https://github.com/ninenines/cowboy), depends on Erlang 22 or later since cowboy 2.8.0. It is recommended to either install Erlang 22 or add `{:cowboy, "~> 2.7.0"}` to your mix.exs once your app has been created.
+
 ## Phoenix
 
 To check that we are on Elixir 1.6 and Erlang 20 or later, run:
@@ -44,7 +46,7 @@ Once we have Elixir and Erlang, we are ready to install the Phoenix application 
 $ mix archive.install hex phx_new 1.5.0
 ```
 
-We will use this generator to generate new applications in the next guide, called [Up and Running](up_and_running.html).
+The `phx.new` generator is now available to generate new applications in the next guide, called [Up and Running](up_and_running.html). The flags mentioned below are command line options to the generator; see all available options by calling `mix help phx.new`.
 
 ## node.js
 
@@ -66,7 +68,7 @@ However, if you are just getting started with Phoenix, we recommend you to insta
 
 ## inotify-tools (for linux users)
 
-Phoenix provides a very handy feature called Live Reloading. As you changed your views or your assets, it automatically reloads the page in the browser. In order for this functionality to work, you need a filesystem watcher.
+Phoenix provides a very handy feature called Live Reloading. As you change your views or your assets, it automatically reloads the page in the browser. In order for this functionality to work, you need a filesystem watcher.
 
 Mac OS X and Windows users already have a filesystem watcher but Linux users must install inotify-tools. Please consult the [inotify-tools wiki](https://github.com/rvoicilas/inotify-tools/wiki) for distribution-specific installation instructions.
 

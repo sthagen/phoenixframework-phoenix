@@ -35,6 +35,10 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
   end
 
   test "generates html resource and handles existing contexts", config do
+    one_day_in_seconds = 24 * 3600
+    naive_datetime = %{NaiveDateTime.utc_now() | second: 0, microsecond: {0, 6}} 
+    datetime = %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
+
     in_tmp_project config.test, fn ->
       Gen.Html.run(~w(Blog Post posts title slug:unique votes:integer cost:decimal
                       tags:array:text popular:boolean drafted_at:datetime
@@ -52,19 +56,19 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file "test/phoenix/blog_test.exs", fn file ->
         assert file =~ "alarm: ~T[15:01:01]"
         assert file =~ "alarm_usec: ~T[15:01:01.000000]"
-        assert file =~ "announcement_date: ~D[2010-04-17]"
-        assert file =~ "deleted_at: ~N[2010-04-17 14:00:00]"
-        assert file =~ "deleted_at_usec: ~N[2010-04-17 14:00:00.000000]"
+        assert file =~ "announcement_date: #{Date.utc_today() |> Date.add(-1) |> inspect()}"
+        assert file =~ "deleted_at: #{naive_datetime |> NaiveDateTime.add(-one_day_in_seconds) |> NaiveDateTime.truncate(:second) |> inspect()}"
+        assert file =~ "deleted_at_usec: #{naive_datetime |> NaiveDateTime.add(-one_day_in_seconds) |> inspect()}"
         assert file =~ "cost: \"120.5\""
-        assert file =~ "published_at: ~U[2010-04-17 14:00:00Z]"
-        assert file =~ "published_at_usec: ~U[2010-04-17 14:00:00.000000Z]"
+        assert file =~ "published_at: #{datetime |> DateTime.add(-one_day_in_seconds) |> DateTime.truncate(:second) |> inspect()}"
+        assert file =~ "published_at_usec: #{datetime |> DateTime.add(-one_day_in_seconds) |> inspect()}"
         assert file =~ "weight: 120.5"
 
-        assert file =~ "assert post.announcement_date == ~D[2011-05-18]"
-        assert file =~ "assert post.deleted_at == ~N[2011-05-18 15:01:01]"
-        assert file =~ "assert post.deleted_at_usec == ~N[2011-05-18 15:01:01.000000]"
-        assert file =~ "assert post.published_at == ~U[2011-05-18 15:01:01Z]"
-        assert file =~ "assert post.published_at_usec == ~U[2011-05-18 15:01:01.000000Z]"
+        assert file =~ "assert post.announcement_date == #{inspect(Date.utc_today())}"
+        assert file =~ "assert post.deleted_at == #{naive_datetime |> NaiveDateTime.truncate(:second) |> inspect()}"
+        assert file =~ "assert post.deleted_at_usec == #{inspect(naive_datetime)}"
+        assert file =~ "assert post.published_at == #{datetime |> DateTime.truncate(:second) |> inspect()}"
+        assert file =~ "assert post.published_at_usec == #{inspect(datetime)}"
         assert file =~ "assert post.alarm == ~T[15:01:01]"
         assert file =~ "assert post.alarm_usec == ~T[15:01:01.000000]"
         assert file =~ "assert post.cost == Decimal.new(\"120.5\")"
@@ -255,6 +259,31 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
     end
   end
 
+  test "with --no-context no warning is emitted when context exists", config do
+    in_tmp_project config.test, fn ->
+      Gen.Html.run(~w(Blog Post posts title:string))
+
+      assert_file "lib/phoenix/blog.ex"
+      assert_file "lib/phoenix/blog/post.ex"
+
+      Gen.Html.run(~w(Blog Comment comments title:string --no-context))
+      refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _]}
+
+      assert_file "test/phoenix_web/controllers/comment_controller_test.exs", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentControllerTest"
+      end
+
+      assert_file "lib/phoenix_web/controllers/comment_controller.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentController"
+        assert file =~ "use PhoenixWeb, :controller"
+      end
+
+      assert_file "lib/phoenix_web/views/comment_view.ex", fn file ->
+        assert file =~ "defmodule PhoenixWeb.CommentView"
+      end
+    end
+  end
+
   test "with --no-schema skips schema file generation", config do
     in_tmp_project config.test, fn ->
       Gen.Html.run(~w(Blog Comment comments title:string --no-schema))
@@ -275,6 +304,17 @@ defmodule Mix.Tasks.Phx.Gen.HtmlTest do
       assert_file "lib/phoenix_web/templates/comment/form.html.eex"
       assert_file "lib/phoenix_web/views/comment_view.ex", fn file ->
         assert file =~ "defmodule PhoenixWeb.CommentView"
+      end
+    end
+  end
+
+  test "when more than 50 arguments are given", config do
+    in_tmp_project config.test, fn ->
+      long_attribute_list = 0..55 |> Enum.map(&("attribute#{&1}:string")) |> Enum.join(" ")
+      Gen.Html.run(~w(Blog Post posts #{long_attribute_list}))
+
+      assert_file "test/phoenix_web/controllers/post_controller_test.exs", fn file ->
+        refute file =~ "...}"
       end
     end
   end

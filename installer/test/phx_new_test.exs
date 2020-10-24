@@ -46,8 +46,10 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       assert_file "phx_blog/config/prod.exs", fn file ->
         assert file =~ "port: 80"
-        assert file =~ ":inet6"
+        assert file =~ "import_config \"prod.secret.exs\""
       end
+
+      assert_file "phx_blog/config/prod.secret.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/
 
       assert_file "phx_blog/lib/phx_blog/application.ex", ~r/defmodule PhxBlog.Application do/
       assert_file "phx_blog/lib/phx_blog.ex", ~r/defmodule PhxBlog do/
@@ -488,6 +490,23 @@ defmodule Mix.Tasks.Phx.NewTest do
           assert file =~ ~s["file:../../../deps/phoenix_html"]
         end
       end
+    end
+  end
+
+  test "new with --no-install" do
+    in_tmp "new with no install", fn ->
+      Mix.Tasks.Phx.New.run([@app_name, "--no-install"])
+
+      # Does not prompt to install dependencies
+      refute_received {:mix_shell, :yes?, ["\nFetch and install dependencies?"]}
+
+      # Instructions
+      assert_received {:mix_shell, :info, ["\nWe are almost there" <> _ = msg]}
+      assert msg =~ "$ cd phx_blog"
+      assert msg =~ "$ mix deps.get"
+
+      assert_received {:mix_shell, :info, ["Then configure your database in config/dev.exs" <> _]}
+      assert_received {:mix_shell, :info, ["Start your Phoenix app" <> _]}
     end
   end
 

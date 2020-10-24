@@ -42,7 +42,7 @@ $ npm install --prefix ./assets
 
 # Compile assets
 $ npm run deploy --prefix ./assets
-$ mix phx.digest
+$ MIX_ENV=prod mix phx.digest
 ```
 
 *Note:* the `--prefix` flag on `npm` may not work on Windows. If so, replace the first command by `cd assets && npm run deploy && cd ..`.
@@ -85,7 +85,7 @@ Release created at _build/prod/rel/my_app!
     _build/prod/rel/my_app/bin/my_app start
 ```
 
-And starting the release now should also successfully start the web server! Now you can get all of the files under the `_build/prod/rel/my_app` directory, package it, and run it in any production machine with the same OS and archictecture as the one that assembled the release. For more details, check the [docs for `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
+And starting the release now should also successfully start the web server! Now you can get all of the files under the `_build/prod/rel/my_app` directory, package it, and run it in any production machine with the same OS and architecture as the one that assembled the release. For more details, check the [docs for `mix release`](https://hexdocs.pm/mix/Mix.Tasks.Release.html).
 
 But before we finish this guide, there are two features from releases most Phoenix applications will use, so let's talk about those.
 
@@ -190,7 +190,7 @@ ENV MIX_ENV=prod
 # install mix dependencies
 COPY mix.exs mix.lock ./
 COPY config config
-RUN mix do deps.get, deps.compile
+RUN mix do deps.get --only $MIX_ENV, deps.compile
 
 # build assets
 COPY assets/package.json assets/package-lock.json ./assets/

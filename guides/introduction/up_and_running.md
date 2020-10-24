@@ -67,6 +67,8 @@ Ok, let's give it a try. First, we'll `cd` into the `hello/` directory we've jus
 $ cd hello
 ```
 
+> If you followed the [Installation Guide](installation.html) and opted to add `{:cowboy, "~> 2.7.0"}` to your mix.exs, go ahead and do that now and run `mix deps.get`.
+
 Now we'll create our database:
 
 ```console
@@ -124,5 +126,5 @@ To stop it, we hit `ctrl-c` twice.
 
 Now you are ready to explore the world provided by Phoenix! See [our community page](community.html) for books, screencasts, courses, and more.
 
-Alternatively, you can continue reading these guides to have a quick introduction into all the parts that make your Phoenix application. The guides can be read in any order If that's the case, you can start with our guide that explains [Phoenix directory structure](directory_structure.html).
+Alternatively, you can continue reading these guides to have a quick introduction into all the parts that make your Phoenix application. If that's the case, you can read the guides in any order or start with our guide that explains the [Phoenix directory structure](directory_structure.html).
 
