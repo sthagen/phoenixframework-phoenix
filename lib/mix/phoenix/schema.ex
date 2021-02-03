@@ -17,6 +17,7 @@ defmodule Mix.Phoenix.Schema do
             plural: nil,
             singular: nil,
             uniques: [],
+            redacts: [],
             assocs: [],
             types: [],
             indexes: [],
@@ -52,7 +53,8 @@ defmodule Mix.Phoenix.Schema do
     :utc_datetime,
     :utc_datetime_usec,
     :uuid,
-    :binary
+    :binary,
+    :enum
   ]
 
   def valid_types, do: @valid_types
@@ -71,7 +73,7 @@ defmodule Mix.Phoenix.Schema do
     repo      = opts[:repo] || Module.concat([base, "Repo"])
     file      = Mix.Phoenix.context_lib_path(ctx_app, basename <> ".ex")
     table     = opts[:table] || schema_plural
-    uniques   = uniques(cli_attrs)
+    {cli_attrs, uniques, redacts} = extract_attr_flags(cli_attrs)
     {assocs, attrs} = partition_attrs_and_assocs(module, attrs(cli_attrs))
     types = types(attrs)
     web_namespace = opts[:web] && Phoenix.Naming.camelize(opts[:web])
@@ -111,6 +113,7 @@ defmodule Mix.Phoenix.Schema do
       types: types,
       defaults: schema_defaults(attrs),
       uniques: uniques,
+      redacts: redacts,
       indexes: indexes(table, assocs, uniques),
       human_singular: Phoenix.Naming.humanize(singular),
       human_plural: Phoenix.Naming.humanize(schema_plural),
@@ -141,14 +144,24 @@ defmodule Mix.Phoenix.Schema do
     |> to_string()
   end
 
-  @doc """
-  Fetches the unique attributes from attrs.
-  """
-  def uniques(attrs) do
-    attrs
-    |> Enum.filter(&String.ends_with?(&1, ":unique"))
-    |> Enum.map(& &1 |> String.split(":", parts: 2) |> hd |> String.to_atom)
+  def extract_attr_flags(cli_attrs) do
+    {attrs, uniques, redacts} = Enum.reduce(cli_attrs, {[], [], []}, fn attr, {attrs, uniques, redacts} ->
+      [attr_name | rest] = String.split(attr, ":")
+      attr_name = String.to_atom(attr_name)
+      split_flags(Enum.reverse(rest), attr_name, attrs, uniques, redacts)
+    end)
+
+    {Enum.reverse(attrs), uniques, redacts}
   end
+
+  defp split_flags(["unique" | rest], name, attrs, uniques, redacts),
+    do: split_flags(rest, name, attrs, [name | uniques], redacts)
+
+  defp split_flags(["redact" | rest], name, attrs, uniques, redacts),
+    do: split_flags(rest, name, attrs, uniques, [name | redacts])
+
+  defp split_flags(rest, name, attrs, uniques, redacts),
+    do: {[Enum.join([name | Enum.reverse(rest)], ":") | attrs ], uniques, redacts}
 
   @doc """
   Parses the attrs as received by generators.
@@ -156,7 +169,6 @@ defmodule Mix.Phoenix.Schema do
   def attrs(attrs) do
     Enum.map(attrs, fn attr ->
       attr
-      |> drop_unique()
       |> String.split(":", parts: 3)
       |> list_to_attr()
       |> validate_attr!()
@@ -209,12 +221,40 @@ defmodule Mix.Phoenix.Schema do
   Build an invalid value for `@invalid_attrs` which is nil by default.
 
   * In case the value is a list, this will return an empty array.
-  * In case the value is date, datetime, naive_datetime or time, the value.
+  * In case the value is date, datetime, naive_datetime or time, this will return an invalid date.
+  * In case it is a boolean, we keep it as false
   """
   def invalid_form_value(value) when is_list(value), do: []
-  def invalid_form_value(%{day: _day, month: _month, year: _year} = value), do: value
+
+  def invalid_form_value(%{day: _day, month: _month, year: _year} = date),
+    do: %{date | day: 30, month: 02}
+
   def invalid_form_value(%{hour: _hour, minute: _minute} = value), do: value
+  def invalid_form_value(true), do: false
   def invalid_form_value(_value), do: nil
+
+  @doc """
+  Generates an invalid error message according to the params present in the schema.
+  """
+  def failed_render_change_message(schema) do
+    if schema.params.create |> Map.values() |> Enum.any?(&date_value?/1) do
+      "is invalid"
+    else
+      "can&apos;t be blank"
+    end
+  end
+
+  def type_for_migration({:enum, _}), do: :string
+  def type_for_migration(other), do: other
+
+  def type_and_opts_for_schema({:enum, opts}), do: ~s|Ecto.Enum, values: #{inspect Keyword.get(opts, :values)}|
+  def type_and_opts_for_schema(other), do: inspect other
+
+  def maybe_redact_field(true), do: ", redact: true"
+  def maybe_redact_field(false), do: ""
+
+  defp date_value?(%{day: _day, month: _month, year: _year}), do: true
+  defp date_value?(_value), do: false
 
   @doc """
   Returns the string value for use in EEx templates.
@@ -227,14 +267,6 @@ defmodule Mix.Phoenix.Schema do
   defp inspect_value(:decimal, value), do: "Decimal.new(\"#{value}\")"
   defp inspect_value(_type, value), do: inspect(value)
 
-  defp drop_unique(info) do
-    prefix = byte_size(info) - 7
-    case info do
-      <<attr::size(prefix)-binary, ":unique">> -> attr
-      _ -> info
-    end
-  end
-
   defp list_to_attr([key]), do: {String.to_atom(key), :string}
   defp list_to_attr([key, value]), do: {String.to_atom(key), String.to_atom(value)}
   defp list_to_attr([key, comp, value]) do
@@ -246,6 +278,7 @@ defmodule Mix.Phoenix.Schema do
   defp type_to_default(key, t, :create) do
     case t do
         {:array, _}     -> []
+        {:enum, values} -> values |> translate_enum_vals() |> hd()
         :integer        -> 42
         :float          -> 120.5
         :decimal        -> "120.5"
@@ -266,6 +299,7 @@ defmodule Mix.Phoenix.Schema do
   defp type_to_default(key, t, :update) do
     case t do
         {:array, _}     -> []
+        {:enum, values} -> values |> translate_enum_vals() |> tl() |> hd()
         :integer        -> 43
         :float          -> 456.7
         :decimal        -> "456.7"
@@ -296,6 +330,14 @@ defmodule Mix.Phoenix.Schema do
   defp build_utc_naive_datetime,
     do: NaiveDateTime.truncate(build_utc_naive_datetime_usec(), :second)
 
+
+  @enum_missing_values_error """
+  Enum type requires at least two values
+  For example:
+
+      mix phx.gen.schema Comment comments body:text status:enum:published:unpublished
+  """
+
   defp validate_attr!({name, :datetime}), do: validate_attr!({name, :naive_datetime})
   defp validate_attr!({name, :array}) do
     Mix.raise """
@@ -305,11 +347,23 @@ defmodule Mix.Phoenix.Schema do
         mix phx.gen.schema Post posts settings:array:string
     """
   end
+  defp validate_attr!({_name, :enum}), do: Mix.raise @enum_missing_values_error
   defp validate_attr!({_name, type} = attr) when type in @valid_types, do: attr
+  defp validate_attr!({_name, {:enum, vals}} = attr), do: validate_enum_attr!(vals, attr)
   defp validate_attr!({_name, {type, _}} = attr) when type in @valid_types, do: attr
   defp validate_attr!({_, type}) do
     Mix.raise "Unknown type `#{inspect type}` given to generator. " <>
               "The supported types are: #{@valid_types |> Enum.sort() |> Enum.join(", ")}"
+  end
+
+  defp validate_enum_attr!(vals, attr) do
+     vals
+    |> Atom.to_string()
+    |> String.split(":")
+    |> case do
+      [_] -> Mix.raise @enum_missing_values_error
+      _ -> attr
+    end
   end
 
   defp partition_attrs_and_assocs(schema_module, attrs) do
@@ -354,9 +408,17 @@ defmodule Mix.Phoenix.Schema do
 
   defp types(attrs) do
     Enum.into(attrs, %{}, fn
+      {key, {:enum, vals}} -> {key, {:enum, values: translate_enum_vals(vals)}}
       {key, {root, val}} -> {key, {root, schema_type(val)}}
       {key, val} -> {key, schema_type(val)}
     end)
+  end
+
+  def translate_enum_vals(vals) do
+    vals
+    |> Atom.to_string()
+    |> String.split(":")
+    |> Enum.map(&String.to_atom/1)
   end
 
   defp schema_type(:text), do: :string

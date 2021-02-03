@@ -1,8 +1,8 @@
 # Controllers
 
-> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through [the Request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
 
 Phoenix controllers act as intermediary modules. Their functions - called actions - are invoked from the router in response to HTTP requests. The actions, in turn, gather all the necessary data and perform all the necessary steps before invoking the view layer to render a template or returning a JSON response.
 
@@ -64,7 +64,7 @@ While we can name our actions whatever we like, there are conventions for action
 
 Each of these actions takes two parameters, which will be provided by Phoenix behind the scenes.
 
-The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn`, comes to Phoenix via Elixir's Plug middleware framework. More detailed info about `conn` can be found in [plug's documentation](https://hexdocs.pm/plug/Plug.Conn.html).
+The first parameter is always `conn`, a struct which holds information about the request such as the host, path elements, port, query string, and much more. `conn` comes to Phoenix via Elixir's Plug middleware framework. More detailed info about `conn` can be found in [Plug's documentation](https://hexdocs.pm/plug/Plug.Conn.html).
 
 The second parameter is `params`. Not surprisingly, this is a map which holds any parameters passed along in the HTTP request. It is a good practice to pattern match against params in the function signature to provide data in a simple package we can pass on to rendering. We saw this in the [Request life-cycle guide](request_lifecycle.html) when we added a messenger parameter to our `show` route in `lib/hello_web/controllers/hello_controller.ex`.
 
@@ -82,7 +82,7 @@ In some cases - often in `index` actions, for instance - we don't care about par
 
 ## Rendering
 
-Controllers have several ways of rendering content. The simplest is to render some plain text using the `text/2` function which Phoenix provides.
+Controllers can render content in several ways. The simplest is to render some plain text using the `text/2` function which Phoenix provides.
 
 For example, let's rewrite the `show` action from `PageController` to return text instead. For that, we could do the following.
 
@@ -131,7 +131,7 @@ It is worth noting that the `text/2`, `json/2`, and `html/2` functions require n
 
 The `json/2` function is obviously useful for writing APIs, and the other two may come in handy, but most of the times we use Phoenix views to build our responses. For this, Phoenix provides the `render/3` function.
 
-Let's rollback our `show` action to what we originally wrote [in the Request life-cycle guide](request_lifecycle.html):
+Let's rollback our `show` action to what we originally wrote in the [Request life-cycle guide](request_lifecycle.html):
 
 ```elixir
 defmodule HelloWeb.HelloController do
@@ -290,7 +290,7 @@ Using Plug functions in this way, we can craft just the response we need.
 
 Analogous to the `_format` query string param, we can render any sort of format we want by modifying the HTTP Content-Type Header and providing the appropriate template.
 
-If we wanted to render an xml version of our `index` action, we might implement the action like this in `lib/hello_web/page_controller.ex`.
+If we wanted to render an XML version of our `index` action, we might implement the action like this in `lib/hello_web/page_controller.ex`.
 
 ```elixir
 def index(conn, _params) do
@@ -300,7 +300,7 @@ def index(conn, _params) do
 end
 ```
 
-We would then need to provide an `index.xml.eex` template which created valid xml, and we would be done.
+We would then need to provide an `index.xml.eex` template which created valid XML, and we would be done.
 
 For a list of valid content mime-types, please see the [mime.types](https://github.com/elixir-plug/mime/blob/master/priv/mime.types) documentation from the mime type library.
 
@@ -387,7 +387,7 @@ Using route helpers is actually the preferred approach to link to any page withi
 
 ## Flash Messages
 
-There are times when we need to communicate with users during the course of an action. Maybe there was an error updating a schema. Maybe we just want to welcome them back to the application. For this, we have flash messages.
+Sometimes we need to communicate with users during the course of an action. Maybe there was an error updating a schema, or maybe we just want to welcome them back to the application. For this, we have flash messages.
 
 The `Phoenix.Controller` module provides the `put_flash/3` and `get_flash/2` functions to help us set and retrieve flash messages as a key value pair. Let's set two flash messages in our `HelloWeb.PageController` to try this out.
 
@@ -416,7 +416,7 @@ Fortunately, our application layout, `lib/hello_web/templates/layout/app.html.ee
 
 When we reload the [Welcome Page](http://localhost:4000/), our messages should appear just above "Welcome to Phoenix!"
 
-The flash functionality is handy when mixed with redirects. Perhaps you want to redirect to a page with some extra information. If we re-use the redirect action from the previous section, we can do:
+The flash functionality is handy when mixed with redirects. Perhaps you want to redirect to a page with some extra information. If we reuse the redirect action from the previous section, we can do:
 
 ```elixir
   def index(conn, _params) do

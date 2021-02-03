@@ -5,7 +5,7 @@ defmodule Phoenix.Controller do
   require Logger
   require Phoenix.Endpoint
 
-  @unsent [:unset, :set]
+  @unsent [:unset, :set, :set_chunked, :set_file]
 
   @moduledoc """
   Controllers are used to group common functionality in the same
@@ -933,7 +933,7 @@ defmodule Phoenix.Controller do
     * `:content_type` - the content type of the file or binary
       sent as download. It is automatically inferred from the
       filename extension
-    * `:disposition` - specifies dispositon type
+    * `:disposition` - specifies disposition type
       (`:attachment` or `:inline`). If `:attachment` was used,
       user will be prompted to save the file. If `:inline` was used,
       the browser will attempt to open the file.
@@ -1491,7 +1491,7 @@ defmodule Phoenix.Controller do
       iex> current_path(conn, %{new: "param"})
       "/users/123?new=param"
 
-      iex> current_path(conn, %{filter: %{status: ["draft", "published"})
+      iex> current_path(conn, %{filter: %{status: ["draft", "published"]}})
       "/users/123?filter[status][]=draft&filter[status][]=published"
 
       iex> current_path(conn, %{})

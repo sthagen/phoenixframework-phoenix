@@ -63,6 +63,14 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   Read the documentation for `phx.gen.schema` for more information on
   attributes.
+
+  ## Skipping prompts
+
+  This generator will prompt you if there is an existing context with the same
+  name, in order to provide more instructions on how to correctly use phoenix contexts.
+  You can skip this prompt and automatically merge the new schema access functions and tests into the
+  existing context using `--merge-with-existing-context`. To prevent changes to
+  the existing context and exit the generator, use `--no-merge-with-existing-context`.
   """
 
   use Mix.Task
@@ -71,7 +79,8 @@ defmodule Mix.Tasks.Phx.Gen.Context do
   alias Mix.Tasks.Phx.Gen
 
   @switches [binary_id: :boolean, table: :string, web: :string,
-             schema: :boolean, context: :boolean, context_app: :string]
+             schema: :boolean, context: :boolean, context_app: :string,
+             merge_with_existing_context: :boolean]
 
   @default_opts [schema: true, context: true]
 
@@ -142,10 +151,15 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     context
   end
 
-  defp inject_schema_access(%Context{file: file} = context, paths, binding) do
+  @doc false
+  def ensure_context_file_exists(%Context{file: file} = context, paths, binding) do
     unless Context.pre_existing?(context) do
       Mix.Generator.create_file(file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context.ex", binding))
     end
+  end
+
+  defp inject_schema_access(%Context{file: file} = context, paths, binding) do
+    ensure_context_file_exists(context, paths, binding)
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/#{schema_access_template(context)}", binding)
@@ -156,20 +170,30 @@ defmodule Mix.Tasks.Phx.Gen.Context do
     File.write!(file, content)
   end
 
-  defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
+  @doc false
+  def ensure_test_file_exists(%Context{test_file: test_file} = context, paths, binding) do
     unless Context.pre_existing_tests?(context) do
       Mix.Generator.create_file(test_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/context_test.exs", binding))
     end
+  end
+
+  defp inject_tests(%Context{test_file: test_file} = context, paths, binding) do
+    ensure_test_file_exists(context, paths, binding)
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/test_cases.exs", binding)
     |> inject_eex_before_final_end(test_file, binding)
   end
 
-  defp inject_test_fixture(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
+  @doc false
+  def ensure_test_fixtures_file_exists(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
     unless Context.pre_existing_test_fixtures?(context) do
       Mix.Generator.create_file(test_fixtures_file, Mix.Phoenix.eval_from(paths, "priv/templates/phx.gen.context/fixtures_module.ex", binding))
     end
+  end
+
+  defp inject_test_fixture(%Context{test_fixtures_file: test_fixtures_file} = context, paths, binding) do
+    ensure_test_fixtures_file_exists(context, paths, binding)
 
     paths
     |> Mix.Phoenix.eval_from("priv/templates/phx.gen.context/fixtures.ex", binding)
@@ -256,11 +280,17 @@ defmodule Mix.Tasks.Phx.Gen.Context do
 
   def prompt_for_code_injection(%Context{generate?: false}), do: :ok
   def prompt_for_code_injection(%Context{} = context) do
-    if Context.pre_existing?(context) do
+    if Context.pre_existing?(context) && !merge_with_existing_context?(context) do
+      System.halt()
+    end
+  end
+
+  defp merge_with_existing_context?(%Context{} = context) do
+    Keyword.get_lazy(context.opts, :merge_with_existing_context, fn ->
       function_count = Context.function_count(context)
       file_count = Context.file_count(context)
 
-      Mix.shell().info """
+      Mix.shell().info("""
       You are generating into an existing context.
 
       The #{inspect context.module} context currently has #{function_count} functions and \
@@ -276,10 +306,9 @@ defmodule Mix.Tasks.Phx.Gen.Context do
       to the same context.
 
       If you are not sure, prefer creating a new context over adding to the existing one.
-      """
-      unless Mix.shell().yes?("Would you like to proceed?") do
-        System.halt()
-      end
-    end
+      """)
+
+      Mix.shell().yes?("Would you like to proceed?")
+    end)
   end
 end

@@ -1,6 +1,6 @@
 # Ecto
 
-> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
 Most web applications today need some form of data validation and persistence. In the Elixir ecosystem, we have Ecto to enable this. Before we jump into building database-backed web features, we're going to focus on the finer details of Ecto to give a solid base to build our web features on top of. Let's get started!
 
@@ -140,7 +140,7 @@ config :hello, Hello.Repo,
 ...
 ```
 
-We also have similar configuration in `config/test.exs` and `config/prod.secret.exs` which can also be changed to match your actual credentials.
+We also have similar configuration in `config/test.exs` and `config/runtime.exs` (formerly `config/prod.secret.exs`) which can also be changed to match your actual credentials.
 
 ## The Schema
 
@@ -260,7 +260,7 @@ iex> changeset.errors
  bio: {"can't be blank", [validation: :required]}]
 ```
 
-What happens if we pass a key/value pair that is neither defined in the schema nor required?
+What happens if we pass a key-value pair that is neither defined in the schema nor required?
 
 Inside our existing IEx shell, let's create a `params` map with valid values plus an extra `random_key: "random value"`.
 
@@ -470,7 +470,7 @@ defmodule HelloPhoenix.MixProject do
     [
       {:phoenix, "~> 1.4.0"},
       {:phoenix_ecto, "~> 4.0"},
-      {:ecto_sql, "~> 3.4.4"},
+      {:ecto_sql, "~> 3.5"},
       {:myxql, ">= 0.0.0"},
       {:phoenix_html, "~> 2.11"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
@@ -490,7 +490,7 @@ password: "",
 database: "hello_phoenix_dev"
 ```
 
-If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. You also need to configure the correct values in the `config/test.exs` and `config/prod.secret.exs` files as well.
+If we have an existing configuration block for our `HelloPhoenix.Repo`, we can simply change the values to match our new ones. You also need to configure the correct values in the `config/test.exs` and `config/runtime.exs` (formerly `config/prod.secret.exs`) files as well.
 
 The last change is to open up `lib/hello_phoenix/repo.ex` and make sure to set the `:adapter` to `Ecto.Adapters.MyXQL`.
 
@@ -518,6 +518,6 @@ $ mix ecto.migrate
 
 ## Other options
 
-While Phoenix uses [the Ecto project](https://hexdocs.pm/ecto) to interact with the data access layer, there are many other data access options, some even built into the Erlang standard library. [ETS](http://www.erlang.org/doc/man/ets.html) and [DETS](http://www.erlang.org/doc/man/dets.html) are key value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
+While Phoenix uses the [Ecto project](https://hexdocs.pm/ecto) to interact with the data access layer, there are many other data access options, some even built into the Erlang standard library. [ETS](http://www.erlang.org/doc/man/ets.html) and [DETS](http://www.erlang.org/doc/man/dets.html) are key value data stores built into [OTP](http://www.erlang.org/doc/). OTP also provides a relational database called [mnesia](http://www.erlang.org/doc/man/mnesia.html) with its own query language called QLC. Both Elixir and Erlang also have a number of libraries for working with a wide range of popular data stores.
 
 The data world is your oyster, but we won't be covering these options in these guides.

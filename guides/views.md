@@ -1,10 +1,10 @@
 # Views and templates
 
-> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
-> **Requirement**: This guide expects that you have gone through [the Request life-cycle guide](request_lifecycle.html).
+> **Requirement**: This guide expects that you have gone through the [Request life-cycle guide](request_lifecycle.html).
 
-Phoenix views main job is to render the body of the responses to be sent back to browsers and API clients. Most of the time, we use templates to build said responses, but we can also craft them by hand. We will learn how.
+A Phoenix view's main job is to render the body of the response which gets sent back to browsers and API clients. Most of the time, we use templates to build these responses, but we can also craft them by hand. We will learn how.
 
 ## Rendering Templates
 
@@ -220,7 +220,7 @@ defmodule HelloWeb.PageView do
 end
 ```
 
-In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. The "index.json" and "show.json" are the ones requested directly from the controller. They also match on the assigns sent by the controller. `"index.json"` will respond with JSON like this:
+In the view we see our `render/2` function pattern matching on `"index.json"`, `"show.json"`, and `"page.json"`. The `"index.json"` and `"show.json"` are the ones requested directly from the controller. They also match on the assigns sent by the controller. `"index.json"` will respond with JSON like this:
 
 ```javascript
 {
@@ -245,11 +245,11 @@ And the `render/2` matching `"show.json"`:
 }
 ```
 
-This works because both "index.json" and "show.json" builds themselves on top of an internal "page.json" clause.
+This works because both `index.json` and `show.json` build themselves on top of an internal `page.json` clause.
 
-The `render_many/3` function takes the data we want to respond with (`pages`), a view, and a string to pattern match on the `render/2` function defined on view. It will map over each item in `pages`, and call `PageView.render("page.json", %{page: page})`. `render_one/3` follows, the same signature, ultimately using the `render/2` matching `page.json` to specify what each `page` looks like.
+The `render_many/3` function takes the data we want to respond with (`pages`), a view, and a string to pattern match on the `render/2` function defined on view. It will map over each item in `pages` and call `PageView.render("page.json", %{page: page})`. `render_one/3` follows the same signature, ultimately using the `render/2` matching `page.json` to specify what each `page` looks like.
 
-It's useful to build our views like this so they can be composable. Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/2`:
+It's useful to build our views like this so that they are composable. Imagine a situation where our `Page` has a `has_many` relationship with `Author`, and depending on the request, we may want to send back `author` data with the `page`. We can easily accomplish this with a new `render/2`:
 
 ```elixir
 defmodule HelloWeb.PageView do
@@ -278,4 +278,4 @@ end
 
 ## Error pages
 
-Phoenix has a view called the `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of the `ErrorView` is to handle errors in a general way, from one centralized location.  Similar to the views we built in this guide, error views can return both HTML and JSON responses. See [the Custom Error Pages How-To](custom_error_pages.html) for more information.
+Phoenix has a view called the `ErrorView` which lives in `lib/hello_web/views/error_view.ex`. The purpose of the `ErrorView` is to handle errors in a general way, from one centralized location.  Similar to the views we built in this guide, error views can return both HTML and JSON responses. See the [Custom Error Pages How-To](custom_error_pages.html) for more information.

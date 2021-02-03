@@ -1,6 +1,6 @@
 # Channels
 
-> **Requirement**: This guide expects that you have gone through the introductory guides and got a Phoenix application up and running.
+> **Requirement**: This guide expects that you have gone through the [introductory guides](installation.html) and got a Phoenix application [up and running](up_and_running.html).
 
 Channels are an exciting part of Phoenix that enable soft real-time communication with and between millions of connected clients.
 
@@ -420,7 +420,7 @@ def connect(%{"token" => token}, socket, _connect_info) do
 end
 ```
 
-In our JavaScript, we can use the token set previously when to pass the token when constructing the Socket:
+In our JavaScript, we can use the token set previously when constructing the Socket:
 
 ```javascript
 let socket = new Socket("/socket", {params: {token: window.userToken}})

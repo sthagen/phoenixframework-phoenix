@@ -129,7 +129,7 @@ defmodule Phoenix.Router do
   If the route contains glob-like patterns, parameters for those have to be given as
   list:
 
-      MyAppWeb.Router.Helpers.pages_path(conn_or_endpoint, :show, ["hello", "world"])
+      MyAppWeb.Router.Helpers.page_path(conn_or_endpoint, :show, ["hello", "world"])
       "/pages/hello/world"
 
   The URL generated in the named URL helpers is based on the configuration for
@@ -352,9 +352,9 @@ defmodule Phoenix.Router do
           plug.call(piped_conn, plug.init(opts))
         else
           conn ->
-            duration = System.monotonic_time() - start
+            measurements = %{duration: System.monotonic_time() - start}
             metadata = %{metadata | conn: conn}
-            :telemetry.execute([:phoenix, :router_dispatch, :stop], %{duration: duration}, metadata)
+            :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)
             conn
         rescue
           e in Plug.Conn.WrapperError ->
@@ -854,12 +854,14 @@ defmodule Phoenix.Router do
 
   ## Examples
 
-      scope "/api/v1", as: :api_v1, alias: API.V1 do
+      scope "/api/v1", as: :api_v1 do
         get "/pages/:id", PageController, :show
       end
 
   """
   defmacro scope(path, options, do: context) do
+    options = Macro.expand(options, %{__CALLER__ | function: {:init, 1}})
+
     options = quote do
       path = unquote(path)
       case unquote(options) do
@@ -887,11 +889,14 @@ defmodule Phoenix.Router do
 
   """
   defmacro scope(path, alias, options, do: context) do
+    alias = Macro.expand(alias, %{__CALLER__ | function: {:init, 1}})
+
     options = quote do
       unquote(options)
       |> Keyword.put(:path, unquote(path))
       |> Keyword.put(:alias, unquote(alias))
     end
+
     do_scope(options, context)
   end
 
@@ -946,6 +951,7 @@ defmodule Phoenix.Router do
 
   """
   defmacro forward(path, plug, plug_opts \\ [], router_opts \\ []) do
+    plug = Macro.expand(plug, %{__CALLER__ | function: {:init, 1}})
     router_opts = Keyword.put(router_opts, :as, nil)
 
     quote unquote: true, bind_quoted: [path: path, plug: plug] do
@@ -964,7 +970,7 @@ defmodule Phoenix.Router do
     * `:log` - the configured log level. For example `:debug`
     * `:path_params` - the map of runtime path params
     * `:pipe_through` - the list of pipelines for the route's scope, for example `[:browser]`
-    * `:plug` - the plug to dipatch the route to, for example `AppWeb.PostController`
+    * `:plug` - the plug to dispatch the route to, for example `AppWeb.PostController`
     * `:plug_opts` - the options to pass when calling the plug, for example: `:index`
     * `:route` - the string route pattern, such as `"/posts/:id"`
 

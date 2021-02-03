@@ -50,13 +50,10 @@ defmodule Phoenix.MixProject do
       env: [
         logger: true,
         stacktrace_depth: nil,
-        template_engines: [],
-        format_encoders: [],
         filter_parameters: ["password"],
         serve_endpoints: false,
         gzippable_exts: ~w(.js .css .txt .text .html .json .svg .eot .ttf),
-        static_compressors: [Phoenix.Digester.Gzip],
-        trim_on_html_eex_engine: true
+        static_compressors: [Phoenix.Digester.Gzip]
       ]
     ]
   end
@@ -71,16 +68,18 @@ defmodule Phoenix.MixProject do
       # Optional deps
       {:plug_cowboy, "~> 2.2", optional: true},
       {:jason, "~> 1.0", optional: true},
-      {:phoenix_html, "~> 2.14.2 or ~> 2.15", optional: true},
+      {:phoenix_view, git: "https://github.com/phoenixframework/phoenix_view.git"},
+      {:phoenix_html, "~> 2.14.2 or ~> 3.0", optional: true},
 
-      # Docs dependencies
+      # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.22", only: :docs},
-      {:inch_ex, "~> 2.0", only: :docs},
+      {:ecto, ">= 3.0.0", only: :docs},
+      {:gettext, "~> 0.15.0", only: :docs},
+      {:telemetry_poller, "~> 0.4", only: :docs},
+      {:telemetry_metrics, "~> 0.4", only: :docs},
 
-      # Test dependencies (some also include :docs for cross references)
-      {:gettext, "~> 0.15.0", only: [:docs, :test]},
-      {:telemetry_poller, "~> 0.4", only: [:docs, :test]},
-      {:telemetry_metrics, "~> 0.4", only: [:docs, :test]},
+      # Test dependencies
+      {:phx_new, path: "./installer", only: :test},
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test}
     ]
   end
@@ -89,7 +88,7 @@ defmodule Phoenix.MixProject do
     [
       maintainers: ["Chris McCord", "José Valim", "Gary Rennie", "Jason Stiebs"],
       licenses: ["MIT"],
-      links: %{github: "https://github.com/phoenixframework/phoenix"},
+      links: %{"GitHub" => "https://github.com/phoenixframework/phoenix"},
       files:
         ~w(assets/js lib priv CHANGELOG.md LICENSE.md mix.exs package.json README.md .formatter.exs)
     ]
@@ -125,6 +124,7 @@ defmodule Phoenix.MixProject do
       "guides/contexts.md",
       "guides/mix_tasks.md",
       "guides/telemetry.md",
+      "guides/authentication/mix_phx_gen_auth.md",
       "guides/realtime/channels.md",
       "guides/realtime/presence.md",
       "guides/testing/testing.md",
@@ -144,6 +144,7 @@ defmodule Phoenix.MixProject do
     [
       Introduction: ~r/guides\/introduction\/.?/,
       Guides: ~r/guides\/[^\/]+\.md/,
+      Authentication: ~r/guides\/authentication\/.?/,
       "Real-time components": ~r/guides\/realtime\/.?/,
       Testing: ~r/guides\/testing\/.?/,
       Deployment: ~r/guides\/deployment\/.?/,

@@ -2,7 +2,6 @@
 > Peace of mind from prototype to production.
 
 [![Build Status](https://github.com/phoenixframework/phoenix/workflows/CI/badge.svg)](https://github.com/phoenixframework/phoenix/actions?query=workflow%3ACI)
-[![Inline docs](http://inch-ci.org/github/phoenixframework/phoenix.svg)](http://inch-ci.org/github/phoenixframework/phoenix)
 
 ## Getting started
 
@@ -18,7 +17,7 @@ Phoenix.js documentation is available at [https://hexdocs.pm/phoenix/js](https:/
 
 ## Contributing
 
-We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs [in the issue tracker][4].
+We appreciate any contribution to Phoenix. Check our [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) and [CONTRIBUTING.md](CONTRIBUTING.md) guides for more information. We usually keep a list of features and bugs in the [issue tracker][4].
 
 ### Generating a Phoenix project from unreleased versions
 
@@ -75,7 +74,7 @@ $ npm run watch
 ## Important links
 
 * [#elixir-lang][1] on [Freenode][2] IRC
-* [elixir-lang slack channel][3]
+* [elixir-lang Slack channel][3]
 * [Issue tracker][4]
 * [Phoenix Forum (questions)][5]
 * [phoenix-core Mailing list (development)][6]

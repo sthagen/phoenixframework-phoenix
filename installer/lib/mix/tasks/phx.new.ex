@@ -110,6 +110,7 @@ defmodule Mix.Tasks.Phx.New do
              gettext: :boolean, umbrella: :boolean, verbose: :boolean,
              live: :boolean, dashboard: :boolean, install: :boolean]
 
+  @impl true
   def run([version]) when version in ~w(-v --version) do
     Mix.shell().info("Phoenix v#{@version}")
   end
@@ -126,6 +127,7 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
+  @doc false
   def run(argv, generator, path) do
     elixir_version_check!()
     case parse_opts(argv) do
@@ -134,7 +136,7 @@ defmodule Mix.Tasks.Phx.New do
     end
   end
 
-  def generate(base_path, generator, path, opts) do
+  defp generate(base_path, generator, path, opts) do
     base_path
     |> Project.new(opts)
     |> generator.prepare_project()
@@ -235,8 +237,8 @@ defmodule Mix.Tasks.Phx.New do
   defp print_webpack_info(_project, _gen) do
     Mix.shell().info """
     Phoenix uses an optional assets build tool called webpack
-    that requires node.js and npm. Installation instructions for
-    node.js, which includes npm, can be found at http://nodejs.org.
+    that requires Node.js and npm. Installation instructions for
+    Node.js, which includes npm, can be found at http://nodejs.org.
 
     The command listed next expect that you have npm available.
     If you don't want webpack, you can re-run this generator
@@ -361,8 +363,8 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp elixir_version_check! do
-    unless Version.match?(System.version(), "~> 1.9") do
-      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.9.\n " <>
+    unless Version.match?(System.version(), "~> 1.11") do
+      Mix.raise "Phoenix v#{@version} requires at least Elixir v1.11.\n " <>
                 "You have #{System.version()}. Please update accordingly"
     end
   end

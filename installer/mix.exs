@@ -1,3 +1,8 @@
+for path <- :code.get_path,
+    Regex.match?(~r/phx_new\-\d+\.\d+\.\d\/ebin$/, List.to_string(path)) do
+  Code.delete_path(path)
+end
+
 defmodule Phx.New.MixProject do
   use Mix.Project
 
@@ -10,7 +15,7 @@ defmodule Phx.New.MixProject do
       app: :phx_new,
       start_permanent: Mix.env() == :prod,
       version: @version,
-      elixir: "~> 1.9",
+      elixir: "~> 1.11",
       deps: deps(),
       package: [
         maintainers: [
@@ -43,7 +48,7 @@ defmodule Phx.New.MixProject do
 
   def deps do
     [
-      {:ex_doc, "~> 0.19.1", only: :docs}
+      {:ex_doc, "~> 0.23", only: :docs}
     ]
   end
 

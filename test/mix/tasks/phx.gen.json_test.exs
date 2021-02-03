@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
       %{NaiveDateTime.utc_now() | second: 0, microsecond: {0, 6}}
       |> NaiveDateTime.add(-one_day_in_seconds)
 
-    datetime = 
+    datetime =
       %{DateTime.utc_now() | second: 0, microsecond: {0, 6}}
       |> DateTime.add(-one_day_in_seconds)
 
@@ -55,7 +55,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
                      deleted_at_usec:naive_datetime_usec
                      alarm:time
                      alarm_usec:time_usec
-                     secret:uuid announcement_date:date
+                     secret:uuid:redact announcement_date:date
                      weight:float user_id:references:users))
 
       assert_file "lib/phoenix/blog/post.ex"
@@ -69,7 +69,7 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
         assert file =~ "defmodule PhoenixWeb.PostControllerTest"
         assert file =~ """
               assert %{
-                       "id" => id,
+                       "id" => ^id,
                        "alarm" => "14:00:00",
                        "alarm_usec" => "14:00:00.000000",
                        "announcement_date" => "#{Date.add(Date.utc_today(), -1)}",
@@ -114,6 +114,34 @@ defmodule Mix.Tasks.Phx.Gen.JsonTest do
 
           resources "/posts", PostController, except: [:new, :edit]
       """]}
+    end
+  end
+
+  test "generates into existing context without prompt with --merge-with-existing-context", config do
+    in_tmp_project config.test, fn ->
+      Gen.Json.run(~w(Blog Post posts title))
+
+      assert_file "lib/phoenix/blog.ex", fn file ->
+        assert file =~ "def get_post!"
+        assert file =~ "def list_posts"
+        assert file =~ "def create_post"
+        assert file =~ "def update_post"
+        assert file =~ "def delete_post"
+        assert file =~ "def change_post"
+      end
+
+      Gen.Json.run(~w(Blog Comment comments message:string --merge-with-existing-context))
+
+      refute_received {:mix_shell, :info, ["You are generating into an existing context" <> _notice]}
+
+      assert_file "lib/phoenix/blog.ex", fn file ->
+        assert file =~ "def get_comment!"
+        assert file =~ "def list_comments"
+        assert file =~ "def create_comment"
+        assert file =~ "def update_comment"
+        assert file =~ "def delete_comment"
+        assert file =~ "def change_comment"
+      end
     end
   end
 
