@@ -36,7 +36,7 @@ defmodule Phoenix.Router do
       end
 
   The `get/3` macro above accepts a request to `/pages/hello` and dispatches
-  it to the `PageController`'s `show` action with `%{"page" => "hello"}` in
+  it to `PageController`'s `show` action with `%{"page" => "hello"}` in
   `params`.
 
   Phoenix's router is extremely efficient, as it relies on Elixir
@@ -346,6 +346,9 @@ defmodule Phoenix.Router do
 
     case pipeline.(conn) do
       %Plug.Conn{halted: true} = halted_conn ->
+        measurements = %{duration: System.monotonic_time() - start}
+        metadata = %{metadata | conn: halted_conn}
+        :telemetry.execute([:phoenix, :router_dispatch, :stop], measurements, metadata)
         halted_conn
       %Plug.Conn{} = piped_conn ->
         try do
@@ -408,12 +411,6 @@ defmodule Phoenix.Router do
     end
   end
 
-  @anno (if :erlang.system_info(:otp_release) >= '19' do
-    [generated: true]
-  else
-    [line: -1]
-  end)
-
   @doc false
   defmacro __before_compile__(env) do
     routes = env.module |> Module.get_attribute(:phoenix_routes) |> Enum.reverse
@@ -431,9 +428,8 @@ defmodule Phoenix.Router do
         end
       end
 
-    # @anno is used here to avoid warnings if forwarding to root path
     match_404 =
-      quote @anno do
+      quote [generated: true] do
         def __match_route__(_method, _path_info, _host) do
           :error
         end
@@ -628,6 +624,14 @@ defmodule Phoenix.Router do
   are appended to the ones previously given.
   """
   defmacro pipeline(plug, do: block) do
+    with true <- is_atom(plug),
+         imports = __CALLER__.macros ++ __CALLER__.functions,
+         {mod, _} <- Enum.find(imports, fn {_, imports} -> {plug, 2} in imports end) do
+      raise ArgumentError,
+            "cannot define pipeline named #{inspect(plug)} " <>
+              "because there is an import from #{inspect(mod)} with the same name"
+    end
+
     block =
       quote do
         plug = unquote(plug)
