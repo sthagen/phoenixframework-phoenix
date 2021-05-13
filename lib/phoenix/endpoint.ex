@@ -112,7 +112,15 @@ defmodule Phoenix.Endpoint do
       digest version. This is automatically loaded from `cache_static_manifest` on
       boot. However, if you have your own static handling mechanism, you may want to
       set this value explicitly. This is used by projects such as `LiveView` to
-      detect if the client is running on the latest version of all assets
+      detect if the client is running on the latest version of all assets.
+
+    * `:cache_manifest_skip_vsn` - when true, skips the appended query string 
+      "?vsn=d" when generatic paths to static assets. This query string is used
+      by `Plug.Static` to set long expiry dates, therefore, you should set this
+      option to true only if you are not using `Plug.Static` to serve assets,
+      for example, if you are using a CDN. If you are setting this option, you
+      should also consider passing `--no-vsn` to `mix phx.digest`. Defaults to
+      `false`.
 
     * `:check_origin` - configure the default `:check_origin` setting for
       transports. See `socket/3` for options. Defaults to `true`.
@@ -196,7 +204,7 @@ defmodule Phoenix.Endpoint do
 
   Phoenix allows you to choose which webserver adapter to use. The default
   is `Phoenix.Endpoint.Cowboy2Adapter` which can be configured via the
-  following options.
+  following top-level options.
 
     * `:http` - the configuration for the HTTP server. It accepts all options
       as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/). Defaults
@@ -207,9 +215,10 @@ defmodule Phoenix.Endpoint do
       to `false`
 
     * `:drainer` - a drainer process that triggers when your application is
-      shutting to wait for any on-going request to finish. It accepts all
-      options as defined by [`Plug.Cowboy`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
-      Defaults to `[]` and can be disabled by setting it to false.
+      shutting down to wait for any on-going request to finish. It accepts all
+      options as defined by [`Plug.Cowboy.Drainer`](https://hexdocs.pm/plug_cowboy/Plug.Cowboy.Drainer.html).
+      Defaults to `[]`, which will start a drainer process for each configured endpoint,
+      but can be disabled by setting it to `false`.
 
   ## Endpoint API
 
