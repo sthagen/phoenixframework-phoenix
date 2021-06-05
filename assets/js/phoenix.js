@@ -858,8 +858,8 @@ export class Socket {
     this.defaultEncoder       = Serializer.encode.bind(Serializer)
     this.defaultDecoder       = Serializer.decode.bind(Serializer)
     this.closeWasClean        = false
-    this.unloaded             = false
     this.binaryType           = opts.binaryType || "arraybuffer"
+    this.connectClock         = 1
     if(this.transport !== LongPoll){
       this.encode = opts.encode || this.defaultEncoder
       this.decode = opts.decode || this.defaultDecoder
@@ -867,11 +867,18 @@ export class Socket {
       this.encode = this.defaultEncoder
       this.decode = this.defaultDecoder
     }
+    let awaitingConnectionOnPageShow = null
     if(phxWindow && phxWindow.addEventListener){
-      phxWindow.addEventListener("beforeunload", e => {
+      phxWindow.addEventListener("pagehide", e => {
         if(this.conn){
-          this.unloaded = true
-          this.abnormalClose("unloaded")
+          this.disconnect()
+          awaitingConnectionOnPageShow = this.connectClock
+        }
+      })
+      phxWindow.addEventListener("pageshow", e => {
+        if(awaitingConnectionOnPageShow === this.connectClock){
+          awaitingConnectionOnPageShow = null
+          this.connect()
         }
       })
     }
@@ -884,7 +891,6 @@ export class Socket {
       }
     }
     this.reconnectAfterMs = (tries) => {
-      if(this.unloaded){ return 100 }
       if(opts.reconnectAfterMs){
         return opts.reconnectAfterMs(tries)
       } else {
@@ -934,6 +940,7 @@ export class Socket {
    * @param {string} reason - A textual description of the reason to disconnect. (Optional)
    */
   disconnect(callback, code, reason){
+    this.connectClock++
     this.closeWasClean = true
     this.reconnectTimer.reset()
     this.teardown(callback, code, reason)
@@ -947,6 +954,7 @@ export class Socket {
    * `new Socket("/socket", {params: {user_id: userToken}})`.
    */
   connect(params){
+    this.connectClock++
     if(params){
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
       this.params = closure(params)
@@ -1026,7 +1034,6 @@ export class Socket {
    */
   onConnOpen(){
     if(this.hasLogger()) this.log("transport", `connected to ${this.endPointURL()}`)
-    this.unloaded = false
     this.closeWasClean = false
     this.flushSendBuffer()
     this.reconnectTimer.reset()
@@ -1038,10 +1045,18 @@ export class Socket {
    * @private
    */
 
+  heartbeatTimeout(){
+    if(this.pendingHeartbeatRef){
+      this.pendingHeartbeatRef = null
+      if(this.hasLogger()){ this.log("transport", "heartbeat timeout. Attempting to re-establish connection") }
+      this.abnormalClose("heartbeat timeout")
+    }
+  }
+
   resetHeartbeat(){ if(this.conn && this.conn.skipHeartbeat){ return }
     this.pendingHeartbeatRef = null
-    clearInterval(this.heartbeatTimer)
-    this.heartbeatTimer = setInterval(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+    clearTimeout(this.heartbeatTimer)
+    setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
   }
 
   teardown(callback, code, reason){
@@ -1090,7 +1105,7 @@ export class Socket {
   onConnClose(event){
     if (this.hasLogger()) this.log("transport", "close", event)
     this.triggerChanError()
-    clearInterval(this.heartbeatTimer)
+    clearTimeout(this.heartbeatTimer)
     if(!this.closeWasClean){
       this.reconnectTimer.scheduleTimeout()
     }
@@ -1199,20 +1214,15 @@ export class Socket {
   }
 
   sendHeartbeat(){
-    if(!this.isConnected()){ return }
-    if(this.pendingHeartbeatRef){
-      this.pendingHeartbeatRef = null
-      if (this.hasLogger()) this.log("transport", "heartbeat timeout. Attempting to re-establish connection")
-      this.abnormalClose("heartbeat timeout")
-      return
-    }
+    if(this.pendingHeartbeatRef && !this.isConnected()){ return }
     this.pendingHeartbeatRef = this.makeRef()
     this.push({topic: "phoenix", event: "heartbeat", payload: {}, ref: this.pendingHeartbeatRef})
+    this.heartbeatTimer = setTimeout(() => this.heartbeatTimeout(), this.heartbeatIntervalMs)
   }
 
   abnormalClose(reason){
     this.closeWasClean = false
-    if(this.conn.readyState === SOCKET_STATES.open){ this.conn.close(WS_CLOSE_NORMAL, reason) }
+    if(this.isConnected()){ this.conn.close(WS_CLOSE_NORMAL, reason) }
   }
 
   flushSendBuffer(){
@@ -1225,7 +1235,11 @@ export class Socket {
   onConnMessage(rawMessage){
     this.decode(rawMessage.data, msg => {
       let {topic, event, payload, ref, join_ref} = msg
-      if(ref && ref === this.pendingHeartbeatRef){ this.pendingHeartbeatRef = null }
+      if(ref && ref === this.pendingHeartbeatRef){
+        clearTimeout(this.heartbeatTimer)
+        this.pendingHeartbeatRef = null
+        setTimeout(() => this.sendHeartbeat(), this.heartbeatIntervalMs)
+      }
 
       if (this.hasLogger()) this.log("receive", `${payload.status || ""} ${topic} ${event} ${ref && "(" + ref + ")" || ""}`, payload)
 
