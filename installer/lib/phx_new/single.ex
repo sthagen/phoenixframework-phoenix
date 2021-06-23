@@ -69,7 +69,6 @@ defmodule Phx.New.Single do
 
   template :webpack, [
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
-    {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
     {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
     {:eex,  "phx_assets/socket.js",         :web, "assets/js/socket.js"},
@@ -79,7 +78,6 @@ defmodule Phx.New.Single do
 
   template :webpack_live, [
     {:eex,  "phx_assets/webpack.config.js", :web, "assets/webpack.config.js"},
-    {:text, "phx_assets/babelrc",           :web, "assets/.babelrc"},
     {:eex,  "phx_assets/app.js",            :web, "assets/js/app.js"},
     {:eex,  "phx_assets/app.css",           :web, "assets/css/app.css"},
     {:eex,  "phx_assets/package.json",      :web, "assets/package.json"},
@@ -94,6 +92,7 @@ defmodule Phx.New.Single do
     {:text, "phx_static/phoenix.css", :web, "priv/static/css/phoenix.css"},
     {:text, "phx_static/robots.txt",  :web, "priv/static/robots.txt"},
     {:text, "phx_static/phoenix.js",  :web, "priv/static/js/phoenix.js"},
+    {:text, "phx_static/phoenix.js.map",  :web, "priv/static/js/phoenix.js.map"},
     {:text, "phx_static/phoenix.png", :web, "priv/static/images/phoenix.png"},
     {:text, "phx_static/favicon.ico", :web, "priv/static/favicon.ico"}
   ]

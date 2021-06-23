@@ -15,7 +15,7 @@ defmodule Mix.Tasks.Phx.NewTest do
   end
 
   test "assets are in sync with installer" do
-    for file <- ~w(favicon.ico phoenix.js phoenix.png) do
+    for file <- ~w(favicon.ico phoenix.js phoenix.js.map phoenix.png) do
       assert File.read!("../priv/static/#{file}") ==
         File.read!("templates/phx_static/#{file}")
     end
@@ -109,7 +109,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/.gitignore", "phx_blog-*.tar"
       assert_file "phx_blog/.gitignore", ~r/\n$/
       assert_file "phx_blog/assets/webpack.config.js", "js/app.js"
-      assert_file "phx_blog/assets/.babelrc", "env"
       assert_file "phx_blog/config/dev.exs", fn file ->
         assert file =~ "watchers: [\n    node:"
         assert file =~ "lib/phx_blog_web/(live|views)/.*(ex)"
@@ -132,6 +131,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute File.exists? "phx_blog/priv/static/css/app.css"
       refute File.exists? "phx_blog/priv/static/css/phoenix.css"
       refute File.exists? "phx_blog/priv/static/js/phoenix.js"
+      refute File.exists? "phx_blog/priv/static/js/phoenix.js.map"
       refute File.exists? "phx_blog/priv/static/js/app.js"
 
       assert File.exists?("phx_blog/assets/vendor")
@@ -230,6 +230,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       refute_file "phx_blog/priv/static/favicon.ico"
       refute_file "phx_blog/priv/static/images/phoenix.png"
       refute_file "phx_blog/priv/static/js/phoenix.js"
+      refute_file "phx_blog/priv/static/js/phoenix.js.map"
       refute_file "phx_blog/priv/static/js/app.js"
 
       # No Ecto
@@ -364,6 +365,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file "phx_blog/priv/static/favicon.ico"
       assert_file "phx_blog/priv/static/images/phoenix.png"
       assert_file "phx_blog/priv/static/js/phoenix.js"
+      assert_file "phx_blog/priv/static/js/phoenix.js.map"
       assert_file "phx_blog/priv/static/js/app.js"
     end
   end
