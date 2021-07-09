@@ -18,7 +18,19 @@ config :<%= @app_name %>, <%= @endpoint_module %>,
   secret_key_base: "<%= @secret_key_base %>",
   render_errors: [view: <%= @web_namespace %>.ErrorView, accepts: ~w(<%= if @html do %>html <% end %>json), layout: false],
   pubsub_server: <%= @app_module %>.PubSub,
-  live_view: [signing_salt: "<%= @lv_signing_salt %>"]
+  live_view: [signing_salt: "<%= @lv_signing_salt %>"]<%= if @mailer do %>
+
+# Configures the mailer.
+#
+# By default it uses the "Local" adapter which stores the emails
+# locally. You can see the emails in your browser, at "/dev/mailbox".
+#
+# For production it's recommended to configure a different adapter
+# at the `config/runtime.exs`.
+config :<%= @app_name %>, <%= @app_module %>.Mailer, adapter: Swoosh.Adapters.Local
+
+# Swoosh API client is needed for adapters other than SMTP.
+config :swoosh, :api_client, false<% end %>
 
 # Configures Elixir's Logger
 config :logger, :console,

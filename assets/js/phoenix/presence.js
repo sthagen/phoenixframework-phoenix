@@ -106,14 +106,14 @@ export default class Presence {
    *
    * @returns {Presence}
    */
-  static syncDiff(currentState, {joins, leaves}, onJoin, onLeave){
-    let state = this.clone(currentState)
+  static syncDiff(state, diff, onJoin, onLeave){
+    let {joins, leaves} = this.clone(diff)
     if(!onJoin){ onJoin = function (){ } }
     if(!onLeave){ onLeave = function (){ } }
 
     this.map(joins, (key, newPresence) => {
       let currentPresence = state[key]
-      state[key] = newPresence
+      state[key] = this.clone(newPresence)
       if(currentPresence){
         let joinedRefs = state[key].metas.map(m => m.phx_ref)
         let curMetas = currentPresence.metas.filter(m => joinedRefs.indexOf(m.phx_ref) < 0)
