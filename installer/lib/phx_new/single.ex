@@ -48,6 +48,7 @@ defmodule Phx.New.Single do
   ]
 
   template :live, [
+    {:eex, "phx_live/assets/topbar.js",                      :web,     "assets/vendor/topbar.js"},
     {:eex, "phx_live/templates/layout/root.html.leex",       :project, "lib/:lib_web_name/templates/layout/root.html.leex"},
     {:eex, "phx_live/templates/layout/app.html.leex",        :project, "lib/:lib_web_name/templates/layout/app.html.eex"},
     {:eex, "phx_live/templates/layout/live.html.leex",       :project, "lib/:lib_web_name/templates/layout/live.html.leex"},
@@ -117,8 +118,6 @@ defmodule Phx.New.Single do
   end
 
   def generate(%Project{} = project) do
-    if Project.live?(project), do: assert_live_switches!(project)
-
     copy_from project, __MODULE__, :new
 
     if Project.ecto?(project), do: gen_ecto(project)
@@ -163,11 +162,5 @@ defmodule Phx.New.Single do
 
   def gen_mailer(%Project{} = project) do
     copy_from project, __MODULE__, :mailer
-  end
-
-  def assert_live_switches!(project) do
-    unless Project.html?(project) and Project.assets?(project) do
-      raise "cannot generate --live project with --no-html or --no-assets. LiveView requires HTML and assets"
-    end
   end
 end
