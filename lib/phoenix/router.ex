@@ -676,7 +676,21 @@ defmodule Phoenix.Router do
   See `pipeline/2` for more information.
   """
   defmacro plug(plug, opts \\ []) do
-    plug = Macro.expand(plug, %{__CALLER__ | function: {:init, 1}})
+    runtime? = Phoenix.plug_init_mode() == :runtime
+
+    plug =
+      if runtime? do
+        expand_alias(plug, __CALLER__)
+      else
+        plug
+      end
+
+    opts =
+      if runtime? and Macro.quoted_literal?(opts) do
+        Macro.prewalk(opts, &expand_alias(&1, __CALLER__))
+      else
+        opts
+      end
 
     quote do
       if pipeline = @phoenix_pipeline do
@@ -686,6 +700,11 @@ defmodule Phoenix.Router do
       end
     end
   end
+
+  defp expand_alias({:__aliases__, _, _} = alias, env),
+    do: Macro.expand(alias, %{env | function: {:init, 1}})
+
+  defp expand_alias(other, _env), do: other
 
   @doc """
   Defines a list of plugs (and pipelines) to send the connection through.
