@@ -174,7 +174,11 @@ defmodule Phoenix.CodeReloader.Server do
 
     purge = mix_compile_deps(Mix.Dep.cached(), apps_to_reload, compilers, purge)
     mix_compile_project(config[:app], apps_to_reload, compilers, purge)
-    Code.prepend_path(path)
+
+    if config[:consolidate_protocols] do
+      Code.prepend_path(path)
+    end
+
     :ok
   end
 
@@ -221,7 +225,7 @@ defmodule Phoenix.CodeReloader.Server do
         raise """
         could not compile application: #{Mix.Project.config()[:app]}.
 
-        You must restart your server after changing the following config or lib files:
+        You must restart your server after changing the following files:
 
           * #{Enum.map_join(files, "\n  * ", &Path.relative_to_cwd/1)}
 
