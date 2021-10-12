@@ -1,7 +1,7 @@
 defmodule Phoenix.MixProject do
   use Mix.Project
 
-  @version "1.6.0"
+  @version "1.6.2"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -85,7 +85,7 @@ defmodule Phoenix.MixProject do
       {:websocket_client, git: "https://github.com/jeremyong/websocket_client.git", only: :test},
 
       # Dev dependencies
-      {:esbuild, "~> 0.1", only: :dev}
+      {:esbuild, "~> 0.3", only: :dev}
     ]
   end
 
