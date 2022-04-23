@@ -105,6 +105,8 @@ defmodule Phoenix.Token do
       when generating the encryption and signing keys. Defaults to `:sha256`
     * `:signed_at` - set the timestamp of the token in seconds.
       Defaults to `System.system_time(:second)`
+    * `:max_age` - the default maximum age of the token. Defaults to
+      86400 seconds (1 day) and it may be overridden on verify/4.
 
   """
   def sign(context, salt, data, opts \\ []) when is_binary(salt) do
@@ -163,7 +165,7 @@ defmodule Phoenix.Token do
   returned a tuple of type `{:ok, user_id}`. The server can now proceed with
   the request.
 
-  However, if the client had sent an expired or otherwise invalid token
+  However, if the client had sent an expired token, an invalid token, or `nil`,
   `verify/4` would have returned an error instead:
 
       iex> Phoenix.Token.verify(secret, namespace, expired, max_age: 86400)
@@ -171,6 +173,9 @@ defmodule Phoenix.Token do
 
       iex> Phoenix.Token.verify(secret, namespace, invalid, max_age: 86400)
       {:error, :invalid}
+
+      iex> Phoenix.Token.verify(secret, namespace, nil, max_age: 86400)
+      {:error, :missing}
 
   ## Options
 
@@ -197,8 +202,8 @@ defmodule Phoenix.Token do
   ## Options
 
     * `:max_age` - verifies the token only if it has been generated
-      "max age" ago in seconds. A reasonable value is 1 day (86400
-      seconds)
+      "max age" ago in seconds. Defaults to the max age signed in the
+      token (86400)
     * `:key_iterations` - option passed to `Plug.Crypto.KeyGenerator`
       when generating the encryption and signing keys. Defaults to 1000
     * `:key_length` - option passed to `Plug.Crypto.KeyGenerator`

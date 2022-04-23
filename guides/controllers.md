@@ -179,7 +179,7 @@ Now let's actually create another layout and render the index template into it. 
 
 Remove these lines:
 
-```html
+```heex
 <a href="https://phoenixframework.org/" class="phx-logo">
   <img src={Routes.static_path(@conn, "/images/phoenix.png")} alt="Phoenix Framework Logo"/>
 </a>
@@ -187,7 +187,7 @@ Remove these lines:
 
 Replace them with:
 
-```html
+```heex
 <p>Administration</p>
 ```
 
@@ -219,7 +219,7 @@ end
 
 What it doesn't have is an alternative template for rendering text. Let's add one at `lib/hello_web/templates/page/index.text.eex`. Here is our example `index.text.eex` template.
 
-```html
+```heex
 OMG, this is actually some text.
 ```
 
@@ -262,9 +262,10 @@ def index(conn, _params) do
 end
 ```
 
-Reloading [http://localhost:4000](http://localhost:4000) should show us a completely blank page. The network tab of our browser's developer tools should show a response status of "201" (Created).
+Reloading [http://localhost:4000](http://localhost:4000) should show us a completely blank page. The network tab of our browser's developer tools should show a response status of "201" (Created). Some browsers (Safari) will download the response, as the content type is not set.
 
-If we would like to be really specific about the content type, we can use [`put_resp_content_type/2`] in conjunction with [`send_resp/3`].
+To be specific about the content type, we can use [`put_resp_content_type/2`] in conjunction with [`send_resp/3`].
+
 
 ```elixir
 def index(conn, _params) do
@@ -398,7 +399,7 @@ In order to see our flash messages, we need to be able to retrieve them and disp
 
 For our convenience, the application layout, `lib/hello_web/templates/layout/app.html.heex`, already has markup for displaying flash messages.
 
-```html
+```heex
 <p class="alert alert-info" role="alert"><%= get_flash(@conn, :info) %></p>
 <p class="alert alert-danger" role="alert"><%= get_flash(@conn, :error) %></p>
 ```

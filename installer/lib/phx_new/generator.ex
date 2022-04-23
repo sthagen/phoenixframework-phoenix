@@ -268,30 +268,31 @@ defmodule Phx.New.Generator do
   end
 
   defp get_ecto_adapter("mssql", app, module) do
-    {:tds, Ecto.Adapters.Tds, db_config(app, module, "sa", "some!Password")}
+    {:tds, Ecto.Adapters.Tds, socket_db_config(app, module, "sa", "some!Password")}
   end
 
   defp get_ecto_adapter("mysql", app, module) do
-    {:myxql, Ecto.Adapters.MyXQL, db_config(app, module, "root", "")}
+    {:myxql, Ecto.Adapters.MyXQL, socket_db_config(app, module, "root", "")}
   end
 
   defp get_ecto_adapter("postgres", app, module) do
-    {:postgrex, Ecto.Adapters.Postgres, db_config(app, module, "postgres", "postgres")}
+    {:postgrex, Ecto.Adapters.Postgres, socket_db_config(app, module, "postgres", "postgres")}
   end
 
   defp get_ecto_adapter("sqlite3", app, module) do
-    {:ecto_sqlite3, Ecto.Adapters.SQLite3, db_config(app, module)}
+    {:ecto_sqlite3, Ecto.Adapters.SQLite3, fs_db_config(app, module)}
   end
 
   defp get_ecto_adapter(db, _app, _mod) do
     Mix.raise("Unknown database #{inspect(db)}")
   end
 
-  defp db_config(app, module) do
+  defp fs_db_config(app, module) do
     [
       dev: [
         database: {:literal, ~s|Path.expand("../#{app}_dev.db", Path.dirname(__ENV__.file))|},
         pool_size: 5,
+        stacktrace: true,
         show_sensitive_data_on_connection_error: true
       ],
       test: [
@@ -319,21 +320,22 @@ defmodule Phx.New.Generator do
     ]
   end
 
-  defp db_config(app, module, user, pass) do
+  defp socket_db_config(app, module, user, pass) do
     [
       dev: [
         username: user,
         password: pass,
-        database: "#{app}_dev",
         hostname: "localhost",
+        database: "#{app}_dev",
+        stacktrace: true,
         show_sensitive_data_on_connection_error: true,
         pool_size: 10
       ],
       test: [
         username: user,
         password: pass,
-        database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|},
         hostname: "localhost",
+        database: {:literal, ~s|"#{app}_test\#{System.get_env("MIX_TEST_PARTITION")}"|},
         pool: Ecto.Adapters.SQL.Sandbox,
         pool_size: 10,
       ],
@@ -349,12 +351,14 @@ defmodule Phx.New.Generator do
           environment variable DATABASE_URL is missing.
           For example: ecto://USER:PASS@HOST/DATABASE
           \"""
+
+      maybe_ipv6 = if System.get_env("ECTO_IPV6"), do: [:inet6], else: []
       """,
       prod_config: """
       # ssl: true,
-      # socket_options: [:inet6],
       url: database_url,
-      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+      socket_options: maybe_ipv6
       """
     ]
   end

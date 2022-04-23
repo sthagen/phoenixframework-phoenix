@@ -392,7 +392,7 @@ defmodule Phoenix.Controller do
 
       iex> redirect(conn, to: "/login")
 
-      iex> redirect(conn, external: "http://elixir-lang.org")
+      iex> redirect(conn, external: "https://elixir-lang.org")
 
   """
   def redirect(conn, opts) when is_list(opts) do
@@ -861,7 +861,7 @@ defmodule Phoenix.Controller do
   `Routes.some_route_path` helpers, as those are always relative.
   """
   def put_router_url(conn, %URI{} = uri) do
-    put_private(conn, :phoenix_router_url, uri)
+    put_private(conn, :phoenix_router_url, URI.to_string(uri))
   end
   def put_router_url(conn, url) when is_binary(url) do
     put_private(conn, :phoenix_router_url, url)
@@ -875,7 +875,7 @@ defmodule Phoenix.Controller do
   endpoint configuration (much like `put_router_url/2` but for static URLs).
   """
   def put_static_url(conn, %URI{} = uri) do
-    put_private(conn, :phoenix_static_url, uri)
+    put_private(conn, :phoenix_static_url, URI.to_string(uri))
   end
   def put_static_url(conn, url) when is_binary(url) do
     put_private(conn, :phoenix_static_url, url)
@@ -1081,20 +1081,17 @@ defmodule Phoenix.Controller do
 
   It sets the following headers:
 
+    * `referrer-policy` - only send origin on cross origin requests
     * `x-frame-options` - set to SAMEORIGIN to avoid clickjacking
       through iframes unless in the same origin
     * `x-content-type-options` - set to nosniff. This requires
       script and style tags to be sent with proper content type
-    * `x-xss-protection` - set to "1; mode=block" to improve XSS
-      protection on both Chrome and IE
     * `x-download-options` - set to noopen to instruct the browser
       not to open a download directly in the browser, to avoid
       HTML files rendering inline and accessing the security
       context of the application (like critical domain cookies)
     * `x-permitted-cross-domain-policies` - set to none to restrict
       Adobe Flash Player’s access to data
-    * `cross-origin-window-policy` - set to deny to avoid window
-      control attacks
 
   A custom headers map may also be given to be merged with defaults.
   It is recommended for custom header keys to be in lowercase, to avoid sending
@@ -1113,12 +1110,14 @@ defmodule Phoenix.Controller do
   end
   defp put_secure_defaults(conn) do
     merge_resp_headers(conn, [
-      {"x-frame-options", "SAMEORIGIN"},
-      {"x-xss-protection", "1; mode=block"},
+      # Below is the default from November 2020 but not yet in Safari as in Jan/2022.
+      # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
+      {"referrer-policy", "strict-origin-when-cross-origin"},
       {"x-content-type-options", "nosniff"},
+      # Applies only to Internet Explorer, can safely be removed in the future.
       {"x-download-options", "noopen"},
-      {"x-permitted-cross-domain-policies", "none"},
-      {"cross-origin-window-policy", "deny"}
+      {"x-frame-options", "SAMEORIGIN"},
+      {"x-permitted-cross-domain-policies", "none"}
     ])
   end
 

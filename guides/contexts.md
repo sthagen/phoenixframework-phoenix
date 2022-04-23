@@ -18,17 +18,17 @@ By giving modules that expose and group related functionality the name **context
 
 In Phoenix, contexts often encapsulate data access and data validation. They often talk to a database or APIs. Overall, think of them as boundaries to decouple and isolate parts of your application. Let's use these ideas to build out our web application. Our goal is to build an ecommerce system where we can showcase products, allow users to add products to their cart, and complete their orders.
 
-> How to read this guide: Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully designing their applications. This guide focuses on those readers. On the other hand, experienced developers may get more mileage from nuanced discussions around application design. For those readers, we include a frequently asked questions (FAQ) section at the end of the guide which brings different perspectives to some design decisions made throughout the guide. Beginners can safely skip the FAQ sections and return later when they're ready to dig deeper.
+> How to read this guide: Using the context generators is a great way for beginners and intermediate Elixir programmers alike to get up and running quickly while thoughtfully designing their applications. This guide focuses on those readers.
 
 ### Adding a Catalog Context
 
-An ecommerce platform has wide-reaching coupling across a codebase so it's important to think upfront about writing well-defined interfaces. With that in mind, our goal is to build a product catalog API that handles creating, updating, and deleting the products available in our system. We'll start off with the basic features of showcasing our products, but as we add cart features later. We'll see how starting with a solid foundation with isolated boundaries allows us to grow our application naturally as we add functionality.
+An ecommerce platform has wide-reaching coupling across a codebase so it's important to think upfront about writing well-defined interfaces. With that in mind, our goal is to build a product catalog API that handles creating, updating, and deleting the products available in our system. We'll start off with the basic features of showcasing our products, and we will add shopping cart features later. We'll see how starting with a solid foundation with isolated boundaries allows us to grow our application naturally as we add functionality.
 
 Phoenix includes the `mix phx.gen.html`, `mix phx.gen.json`, `mix phx.gen.live`, and `mix phx.gen.context` generators that apply the ideas of isolating functionality in our applications into contexts. These generators are a great way to hit the ground running while Phoenix nudges you in the right direction to grow your application. Let's put these tools to use for our new product catalog context.
 
 In order to run the context generators, we need to come up with a module name that groups the related functionality that we're building. In the [Ecto guide](ecto.html), we saw how we can use Changesets and Repos to validate and persist user schemas, but we didn't integrate this with our application at large. In fact, we didn't think about where a "user" in our application should live at all. Let's take a step back and think about the different parts of our system. We know that we'll have products to showcase on pages for sale, along with descriptions, pricing, etc. Along with selling products, we know we'll need to support carting, order checkout, and so on. While the products being purchased are related to the cart and checkout processes, showcasing a product and managing the *exhibition* of our products is distinctly different than tracking what a user has placed in their cart or how an order is placed. A `Catalog` context is a natural place for the management of our product details and the showcasing of those products we have for sale.
 
-> Naming things is hard. If you're stuck when trying to come up with a context name when the grouped functionality in your system isn't yet clear, you can simply use the plural form of the resource you're creating. For example, a `Products` context for managing products. As you grow your application and the parts of your system become clear, you can simply rename the context to a more refined name at a later time.
+> Naming things is hard. If you're stuck when trying to come up with a context name when the grouped functionality in your system isn't yet clear, you can simply use the plural form of the resource you're creating. For example, a `Products` context for managing products. As you grow your application and the parts of your system become clear, you can simply rename the context to a more refined one.
 
 To jump-start our catalog context, we'll use `mix phx.gen.html` which creates a context module that wraps up Ecto access for creating, updating, and deleting products, along with web files like controllers and templates for the web interface into our context. Run the following command at your project root:
 
@@ -96,11 +96,11 @@ We modified our price column to a specific precision of 15, scale of 6, along wi
 
 ```console
 $ mix ecto.migrate
-14:09:02.260 [info]  == Running 20210201185747 Hello.Repo.Migrations.CreateProducts.change/0 forward
+14:09:02.260 [info] == Running 20210201185747 Hello.Repo.Migrations.CreateProducts.change/0 forward
 
-14:09:02.262 [info]  create table products
+14:09:02.262 [info] create table products
 
-14:09:02.273 [info]  == Migrated 20210201185747 in 0.0s
+14:09:02.273 [info] == Migrated 20210201185747 in 0.0s
 ```
 
 Before we jump into the generated code, let's start the server with `mix phx.server` and visit [http://localhost:4000/products](http://localhost:4000/products). Let's follow the "New Product" link and click the "Save" button without providing any input. We should be greeted with the following output:
@@ -262,7 +262,7 @@ Intuitively, you would assume the following events:
   1. User 1 loads the product page with count of 13
   2. User 1 saves the product page with count of 14
   3. User 2 loads the product page with count of 14
-  4. User 2 loads the product page with count of 15
+  4. User 2 saves the product page with count of 15
 
 While in practice this would happen:
 
@@ -273,7 +273,7 @@ While in practice this would happen:
 
 The race conditions would make this an unreliable way to update the existing table since multiple callers may be updating out of date view values. There's a better way.
 
-Let's think of a function describes what we want to accomplish. Here's how we would like to use it:
+Let's think of a function that describes what we want to accomplish. Here's how we would like to use it:
 
     product = Catalog.inc_page_views(product)
 
@@ -325,7 +325,7 @@ Our basic catalog features are nice, but let's take it up a notch by categorizin
 
 For now, categories will contain only textual information. Our first order of business is to decide where categories live in the application. We have our `Catalog` context, which manages the exhibition of our products. Product categorization is a natural fit here. Phoenix is also smart enough to generate code inside an existing context, which makes adding new resources to a context a breeze. Run the following command at your project root:
 
-> Sometimes it may be tricky to determine if two resources belong to the same context or not. In those cases, prefer distinct contexts per resource and refactor later if necessary. Otherwise you can easily end-up with large contexts of loosely related entities. Also keep in mind that the fact two resources are related does not necessarily mean they belong to the same context, otherwise you would quickly end-up with one large context, as the majority of resources in an application are connected to each other. To sum it up: if you are unsure, you should prefer explicit modules (contexts) between resources.
+> Sometimes it may be tricky to determine if two resources belong to the same context or not. In those cases, prefer distinct contexts per resource and refactor later if necessary. Otherwise you can easily end-up with large contexts of loosely related entities. Also keep in mind that the fact two resources are related does not necessarily mean they belong to the same context, otherwise you would quickly end-up with one large context, as the majority of resources in an application are connected to each other. To sum it up: if you are unsure, you should prefer separate modules (contexts).
 
 ```console
 $ mix phx.gen.context Catalog Category categories \
@@ -367,38 +367,37 @@ defmodule Hello.Repo.Migrations.CreateProductCategories do
     end
 
     create index(:product_categories, [:product_id])
-    create index(:product_categories, [:category_id])
-    create unique_index(:product_categories, [:product_id, :category_id])
+    create unique_index(:product_categories, [:category_id, :product_id])
   end
 end
 ```
 
 We created a `product_categories` table and used the `primary_key: false` option since our join table does not need a primary key. Next we defined our `:product_id` and `:category_id` foreign key fields, and passed `on_delete: :delete_all` to ensure the database prunes our join table records if a linked product or category is deleted. By using a database constraint, we enforce data integrity at the database level, rather than relying on ad-hoc and error-prone application logic.
 
-Next, we created indexes for our foreign keys, and a unique index to ensure a product cannot have duplicate categories. With our migrations in place, we can migrate up.
+Next, we created indexes for our foreign keys, one of which is a unique index to ensure a product cannot have duplicate categories. Note that we do not necessarily need single-column index for `category_id` because it is in the leftmost prefix of multicolumn index, which is enough for the database optimizer. Adding a redundant index, on the other hand, only adds overhead on write.
+
+With our migrations in place, we can migrate up.
 
 ```console
 $ mix ecto.migrate
 
-18:20:36.489 [info]  == Running 20210222231834 Hello.Repo.Migrations.CreateCategories.change/0 forward
+18:20:36.489 [info] == Running 20210222231834 Hello.Repo.Migrations.CreateCategories.change/0 forward
 
-18:20:36.493 [info]  create table categories
+18:20:36.493 [info] create table categories
 
-18:20:36.508 [info]  create index categories_title_index
+18:20:36.508 [info] create index categories_title_index
 
-18:20:36.512 [info]  == Migrated 20210222231834 in 0.0s
+18:20:36.512 [info] == Migrated 20210222231834 in 0.0s
 
-18:20:36.547 [info]  == Running 20210222231930 Hello.Repo.Migrations.CreateProductCategories.change/0 forward
+18:20:36.547 [info] == Running 20210222231930 Hello.Repo.Migrations.CreateProductCategories.change/0 forward
 
-18:20:36.547 [info]  create table product_categories
+18:20:36.547 [info] create table product_categories
 
-18:20:36.557 [info]  create index product_categories_product_id_index
+18:20:36.557 [info] create index product_categories_product_id_index
 
-18:20:36.558 [info]  create index product_categories_category_id_index
+18:20:36.560 [info]  create index product_categories_category_id_product_id_index
 
-18:20:36.560 [info]  create index product_categories_product_id_category_id_index
-
-18:20:36.562 [info]  == Migrated 20210222231930 in 0.0s
+18:20:36.562 [info] == Migrated 20210222231930 in 0.0s
 ```
 
 Now that we have a `Catalog.Product` schema and a join table to associate products and categories, we're nearly ready to start wiring up our new features. Before we dive in, we first need real categories to select in our web UI. Let's quickly seed some new categories in the application. Add the following code to your seeds file in `priv/repo/seeds.exs`:
@@ -524,7 +523,7 @@ With our `category_select` function in place, we can open up `lib/hello_web/temp
 
 We added a `category_select` above our save button. Now let's try it out. Next, let's show the product's categories in the product show template. Add the following code to `lib/hello_web/templates/product/show.html.heex`:
 
-```html
+```heex
   ...
 + <li>
 +   <strong>Categories:</strong>
@@ -637,34 +636,34 @@ We used the `:delete_all` strategy again to enforce data integrity. This way, wh
 ```console
 $ mix ecto.migrate
 
-16:59:51.941 [info]  == Running 20210205203342 Hello.Repo.Migrations.CreateCarts.change/0 forward
+16:59:51.941 [info] == Running 20210205203342 Hello.Repo.Migrations.CreateCarts.change/0 forward
 
-16:59:51.945 [info]  create table carts
+16:59:51.945 [info] create table carts
 
-16:59:51.949 [info]  create index carts_user_uuid_index
+16:59:51.949 [info] create index carts_user_uuid_index
 
-16:59:51.952 [info]  == Migrated 20210205203342 in 0.0s
+16:59:51.952 [info] == Migrated 20210205203342 in 0.0s
 
-16:59:51.988 [info]  == Running 20210205213410 Hello.Repo.Migrations.CreateCartItems.change/0 forward
+16:59:51.988 [info] == Running 20210205213410 Hello.Repo.Migrations.CreateCartItems.change/0 forward
 
-16:59:51.988 [info]  create table cart_items
+16:59:51.988 [info] create table cart_items
 
-16:59:51.998 [info]  create index cart_items_cart_id_index
+16:59:51.998 [info] create index cart_items_cart_id_index
 
-16:59:52.000 [info]  create index cart_items_product_id_index
+16:59:52.000 [info] create index cart_items_product_id_index
 
-16:59:52.001 [info]  create index cart_items_cart_id_product_id_index
+16:59:52.001 [info] create index cart_items_cart_id_product_id_index
 
-16:59:52.002 [info]  == Migrated 20210205213410 in 0.0s
+16:59:52.002 [info] == Migrated 20210205213410 in 0.0s
 ```
 
 Our database is ready to go with new `carts` and `cart_items` tables, but now we need to map that back into application code. You may be wondering how we can mix database foreign keys across different tables and how that relates to the context pattern of isolated, grouped functionality. Let's jump in and discuss the approaches and their tradeoffs.
 
 ### Cross-context data
 
-Dependencies in your software are often unavoidable, but we can do our best to limit them where possible and lessen the maintenance burden when a dependency is necessary. So far, we've done a great job isolating the two main contexts of our application from each other, but now we have a necessary dependency to handle.
+So far, we've done a great job isolating the two main contexts of our application from each other, but now we have a necessary dependency to handle.
 
-Our `Catalog.Product` resource serves to keep the responsibilities of representing a product inside the catalog, but ultimately for an item to exist in the cart, a product from the catalog must be present. Given this, our `ShoppingCart` context will have a data dependency on the `Catalog` context. With that in mind, we have two options. One is to expose APIs on the `Catalog` context that allows us to efficiently fetch product data for use in the `ShoppingCart` system, or we can use database joins to fetch the dependent data. Both are valid options given your tradeoffs and application size, but joining data from the database when you have a hard data dependency is just fine for a large class of applications. Additionally, joining data yourself results in increased application code complexity, worse performance, and potential data inconsistencies. Also, if you decide to break out coupled contexts into entirely separate applications and databases at a later time, you still gain the benefits of isolation. This is because your public context APIs will likely remain unchanged.
+Our `Catalog.Product` resource serves to keep the responsibilities of representing a product inside the catalog, but ultimately for an item to exist in the cart, a product from the catalog must be present. Given this, our `ShoppingCart` context will have a data dependency on the `Catalog` context. With that in mind, we have two options. One is to expose APIs on the `Catalog` context that allows us to efficiently fetch product data for use in the `ShoppingCart` system, which we would manually stitch together. Or we can use database joins to fetch the dependent data. Both are valid options given your tradeoffs and application size, but joining data from the database when you have a hard data dependency is just fine for a large class of applications and is the approach we will take here.
 
 Now that we know where our data dependencies exist, let's add our schema associations so we can tie shopping cart items to products. First, let's make a quick change to our cart schema in `lib/hello/shopping_cart/cart.ex` to associate a cart to its items:
 
@@ -752,7 +751,7 @@ We added a new `:fetch_current_user` and `:fetch_current_cart` plug to our brows
 
 We'll need to implement a cart controller for handling cart operations like viewing a cart, updating quantities, and initiating the checkout process, as well as a cart items controller for adding and removing individual items to and from the cart. Add the following routes to your router in `lib/hello_web/router.ex`:
 
-```elixir
+```diff
   scope "/", HelloWeb do
     pipe_through :browser
 
@@ -768,7 +767,7 @@ We'll need to implement a cart controller for handling cart operations like view
 
 We added a `resources` declaration for a `CartItemController`, which will wire up the routes for a create and delete action for adding and remove individual cart items. Next, we added two new routes pointing at a `CartController`. The first route, a GET request, will map to our show action, to show the cart contents. The second route, a PUT request, will handle the submission of a form for updating our cart quantities.
 
-With our routes in place, let's add the ability to add an item to our cart from the product show page. Create a new file at `lib/hello_web/cart_item_controller.ex` and key this in:
+With our routes in place, let's add the ability to add an item to our cart from the product show page. Create a new file at `lib/hello_web/controllers/cart_item_controller.ex` and key this in:
 
 ```elixir
 defmodule HelloWeb.CartItemController do
@@ -799,9 +798,9 @@ defmodule HelloWeb.CartItemController do
 end
 ```
 
-We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we first lookup the product in the catalog with `Catalog.get_product!/1`, then we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec our our web layer and context APIs without thinking about all the implementation details at once.
+We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we first lookup the product in the catalog with `Catalog.get_product!/1`, then we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec out our web layer and context APIs without thinking about all the implementation details at once.
 
-Let's implement our new interface of `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
+Let's implement the new interface for the `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
 ```elixir
   alias Hello.Catalog
@@ -931,7 +930,7 @@ We created a view to render our `show.html` template and aliased our `ShoppingCa
 
 Next we can create the template at `lib/hello_web/templates/cart/show.html.heex`:
 
-```eex
+```heex
 <h1>My Cart</h1>
 
 <%= if @cart.items == [] do %>
@@ -976,7 +975,7 @@ We're almost ready to try out our cart page, but first we need to implement our 
 
 We implemented `total_item_price/1` which accepts a `%CartItem{}` struct. To calculate the total price, we simply take the preloaded product's price and multiply it by the item's quantity. We used `Decimal.mult/2` to take our decimal currency struct and multiply it with proper precision. Similarly for calculating the total cart price, we implemented a `total_cart_price/1` function which accepts the cart and sums the preloaded product prices for items in the cart. We again make use of the `Decimal` functions to add our decimal structs together.
 
-Now that we can calculate price totals, let's try it out! Visit [`http://localhost:4000/cart`](http://localhost:4000/cart) and you should already see your first item in the cart. Going back to the same product and clicking "add to cart" will show our upsert in action. Your quantity should now show be two. Nice work!
+Now that we can calculate price totals, let's try it out! Visit [`http://localhost:4000/cart`](http://localhost:4000/cart) and you should already see your first item in the cart. Going back to the same product and clicking "add to cart" will show our upsert in action. Your quantity should now be two. Nice work!
 
 Our cart page is almost complete, but submitting the form will yield yet another error.
 
@@ -991,7 +990,7 @@ Let's head back to our `CartController` at `lib/hello_web/controllers/cart_contr
 ```elixir
   def update(conn, %{"cart" => cart_params}) do
     case ShoppingCart.update_cart(conn.assigns.cart, cart_params) do
-      {:ok, cart} ->
+      {:ok, _cart} ->
         redirect(conn, to: Routes.cart_path(conn, :show))
 
       {:error, _changeset} ->
@@ -1086,7 +1085,7 @@ We generated a `Orders` context along with HTML controllers, views, etc. We adde
 
 Like we did previously, we gave appropriate precision and scale options for our decimal column which will allow us to store currency without precision loss. We also added a not-null constraint to enforce all orders to have a price.
 
-The orders table alone doesn't hold much information, but we know we'll need to store point-in-time product price information of all the items in the order. For that, we'll add additional struct for this context named `LineItem`. Line items will capture the price of the product *at payment transaction time*. Please run the following command:
+The orders table alone doesn't hold much information, but we know we'll need to store point-in-time product price information of all the items in the order. For that, we'll add an additional struct for this context named `LineItem`. Line items will capture the price of the product *at payment transaction time*. Please run the following command:
 
 ```console
 $ mix phx.gen.context Orders LineItem order_line_items \
@@ -1171,21 +1170,21 @@ We wired up `create` and `show` routes for our generated `OrderController`, sinc
 ```console
 $ mix ecto.migrate
 
-17:14:37.715 [info]  == Running 20210209214612 Hello.Repo.Migrations.CreateOrders.change/0 forward
+17:14:37.715 [info] == Running 20210209214612 Hello.Repo.Migrations.CreateOrders.change/0 forward
 
-17:14:37.720 [info]  create table orders
+17:14:37.720 [info] create table orders
 
-17:14:37.755 [info]  == Migrated 20210209214612 in 0.0s
+17:14:37.755 [info] == Migrated 20210209214612 in 0.0s
 
-17:14:37.784 [info]  == Running 20210209215050 Hello.Repo.Migrations.CreateOrderLineItems.change/0 forward
+17:14:37.784 [info] == Running 20210209215050 Hello.Repo.Migrations.CreateOrderLineItems.change/0 forward
 
-17:14:37.785 [info]  create table order_line_items
+17:14:37.785 [info] create table order_line_items
 
-17:14:37.795 [info]  create index order_line_items_order_id_index
+17:14:37.795 [info] create index order_line_items_order_id_index
 
-17:14:37.796 [info]  create index order_line_items_product_id_index
+17:14:37.796 [info] create index order_line_items_product_id_index
 
-17:14:37.798 [info]  == Migrated 20210209215050 in 0.0s
+17:14:37.798 [info] == Migrated 20210209215050 in 0.0s
 ```
 
 Before we render information about our orders, we need to ensure our order data is fully populated and can be looked up by a current user. Open up your orders context in `lib/hello/orders.ex` and replace your `get_order!/1` function by a new `get_order!/2` definition:
@@ -1261,7 +1260,7 @@ From our requirements alone, we can start to see why a generic `create_order` fu
   end
 ```
 
-We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into a map of order line items structs. The job of order line item record is to capture the price of the product *at payment transaction time*, so we reference the product's price here. Next, we create a bare order changeset with `Ecto.Changeset.change/2` and associate our user UUID, set our total price calculation, and place our order line items in the changeset. With a fresh order changeset ready to be inserted, we can again make use of `Ecto.Multi` to execute our operations in a database transaction. We start by inserting the order, followed by a `run` operation. The `Ecto.Multi.run/3` function allows us to run any code in the function which must either succeed with `{:ok, result}` or error, which halts and rolls back the transaction. Here, we simply can call into our shopping cart context and ask it to prune all items in a cart. Running the transaction will execute the multi as before and we return the result to the caller.
+We started by mapping the `%ShoppingCart.CartItem{}`'s in our shopping cart into a map of order line items structs. The job of the order line item record is to capture the price of the product *at payment transaction time*, so we reference the product's price here. Next, we create a bare order changeset with `Ecto.Changeset.change/2` and associate our user UUID, set our total price calculation, and place our order line items in the changeset. With a fresh order changeset ready to be inserted, we can again make use of `Ecto.Multi` to execute our operations in a database transaction. We start by inserting the order, followed by a `run` operation. The `Ecto.Multi.run/3` function allows us to run any code in the function which must either succeed with `{:ok, result}` or error, which halts and rolls back the transaction. Here, we simply can call into our shopping cart context and ask it to prune all items in a cart. Running the transaction will execute the multi as before and we return the result to the caller.
 
 To close out our order completion, we need to implement the `ShoppingCart.prune_cart_items/1` function in `lib/hello/shopping_cart.ex`:
 
@@ -1284,7 +1283,7 @@ Our new function accepts the cart struct and issues a `Repo.delete_all` which ac
 
 We tweaked the show action to pass our `conn.assigns.current_uuid` to `get_order!` which authorizes orders to be viewable only by the owner of the order. Next, we can replace the order show template in `lib/hello_web/templates/order/show.html.heex`:
 
-```eex
+```heex
 <h1>Thank you for your order!</h1>
 
 <ul>
@@ -1343,4 +1342,8 @@ As we explored the context API, you might have wondered:
 
 > If one of the goals of our context is to encapsulate Ecto Repo access, why does `create_user/1` return an `Ecto.Changeset` struct when we fail to create a user?
 
-The answer is we've decided to expose `%Ecto.Changeset{}` as a public *data-structure* in our application. We saw before how changesets allow us to track field changes, perform validations, and generate error messages. Its use here is decoupled from the private Repo access and Ecto changeset API internals. We're exposing a data structure that the caller understands which contains the rich information like field errors. Conveniently for us, the `phoenix_ecto` project implements the necessary `Phoenix.Param` and [`Phoenix.HTML.FormData`](https://hexdocs.pm/phoenix_html/Phoenix.HTML.FormData.html) protocols which know how to handle `%Ecto.Changeset{}`'s for things like form generation and error messages. You can also think about it as being as if you had defined your own `%Accounts.Changes{}` struct for the same purpose and implemented the Phoenix protocols for the web-layer integration.
+Although Changesets are part of Ecto, they are not tied to the database, and they can be used to map data from and to any source, which makes it a general and useful data structure for tracking field changes, perform validations, and generate error messages.
+
+For those reasons, `%Ecto.Changeset{}` is a good choice to model the data changes between your contexts and your web layer. Regardless if you are talking to an API or the database.
+
+Finally, note that your controllers and views are not hardcoded to work exclusively with Ecto either. Instead, Phoenix defines protocols such as `Phoenix.Param` and `Phoenix.HTML.FormData`, which allow any library to extend how Phoenix generates URL parameters or renders forms. Conveniently for us, the `phoenix_ecto` project implements those protocols, but you could as well bring your own data structures and implement them yourself.

@@ -35,7 +35,7 @@ in lib/hello/application.ex:
     ]
 
 You're all set! See the Phoenix.Presence docs for more details:
-http://hexdocs.pm/phoenix/Phoenix.Presence.html
+https://hexdocs.pm/phoenix/Phoenix.Presence.html
 ```
 
 If we open up the `lib/hello_web/channels/presence.ex` file, we will see the following line:
@@ -92,7 +92,7 @@ We can see presence working by adding the following to `assets/js/app.js`:
 import {Socket, Presence} from "phoenix"
 
 let socket = new Socket("/socket", {params: {token: window.userToken}})
-let channel = socket.channel("room:lobby", {name: window.location.search.split("=")[1])
+let channel = socket.channel("room:lobby", {name: window.location.search.split("=")[1]})
 let presence = new Presence(channel)
 
 function renderOnlineUsers(presence) {
@@ -103,7 +103,7 @@ function renderOnlineUsers(presence) {
     response += `<br>${id} (count: ${count})</br>`
   })
 
-  document.querySelector("main[role=main]").innerHTML = response
+  document.querySelector("main").innerHTML = response
 }
 
 socket.connect()

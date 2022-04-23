@@ -76,7 +76,7 @@ defmodule Phoenix.Endpoint do
 
     * `:code_reloader` - when `true`, enables code reloading functionality.
       For the list of code reloader configuration options see
-      `Phoenix.CodeReloader.reload!/1`. Keep in mind code reloading is
+      `Phoenix.CodeReloader.reload/1`. Keep in mind code reloading is
       based on the file-system, therefore it is not possible to run two
       instances of the same app at the same time with code reloading in
       development, as they will race each other and only one will effectively
@@ -158,9 +158,10 @@ defmodule Phoenix.Endpoint do
     * `:watchers` - a set of watchers to run alongside your server. It
       expects a list of tuples containing the executable and its arguments.
       Watchers are guaranteed to run in the application directory, but only
-      when the server is enabled. For example, the watcher below will run
-      the "watch" mode of the webpack build tool when the server starts.
-      You can configure it to whatever build tool or command you want:
+      when the server is enabled (unless `:force_watchers` configuration is
+      set to `true`). For example, the watcher below will run the "watch" mode
+      of the webpack build tool when the server starts. You can configure it
+      to whatever build tool or command you want:
 
           [
             node: [
@@ -180,6 +181,9 @@ defmodule Phoenix.Endpoint do
       A watcher can also be a module-function-args tuple that will be invoked accordingly:
 
           [another: {Mod, :fun, [arg1, arg2]}]
+
+    * `:force_watchers` - when `true`, forces your watchers to start
+      even when the `:server` option is set to `false`.
 
     * `:live_reload` - configuration for the live reload option.
       Configuration requires a `:patterns` option which should be a list of
@@ -208,6 +212,8 @@ defmodule Phoenix.Endpoint do
           [view: MyApp.ErrorView, accepts: ~w(html), layout: false, log: :debug]
 
       The default format is used when none is set in the connection
+
+    * `:log_access_url` - log the access url once the server boots
 
   ### Adapter configuration
 
@@ -497,11 +503,6 @@ defmodule Phoenix.Endpoint do
       @doc """
       Starts the endpoint supervision tree.
 
-      ## Options
-
-        * `:log_access_url` - if the access url should be logged
-          once the endpoint starts
-
       All other options are merged into the endpoint configuration.
       """
       def start_link(opts \\ []) do
@@ -644,8 +645,7 @@ defmodule Phoenix.Endpoint do
 
       # Inline render errors so we set the endpoint before calling it.
       def call(conn, opts) do
-        conn = put_in conn.secret_key_base, config(:secret_key_base)
-        conn = put_in conn.script_name, script_name()
+        conn = %{conn | script_name: script_name(), secret_key_base: config(:secret_key_base)}
         conn = Plug.Conn.put_private(conn, :phoenix_endpoint, __MODULE__)
 
         try do
@@ -712,9 +712,14 @@ defmodule Phoenix.Endpoint do
             conn
           end
         else
-          params_map = {:%{}, [], Plug.Router.Utils.build_path_params_match(vars)}
+          params =
+            for var <- vars,
+                param = Atom.to_string(var),
+                not match?("_" <> _, param),
+                do: {param, Macro.var(var, nil)}
+
           quote do
-            params = unquote(params_map)
+            params = %{unquote_splicing(params)}
             %Plug.Conn{conn | path_params: params, params: params}
           end
         end
@@ -794,12 +799,16 @@ defmodule Phoenix.Endpoint do
             "//*.other.com"
           ]
 
+      Or to accept any origin matching the request connection's host, port, and scheme:
+
+          check_origin: :conn
+
       Or a custom MFA function:
 
           check_origin: {MyAppWeb.Auth, :my_check_origin?, []}
 
       The MFA is invoked with the request `%URI{}` as the first argument,
-      followed by arguments in the MFA list.
+      followed by arguments in the MFA list, and must return a boolean.
 
     * `:code_reloader` - enable or disable the code reloader. Defaults to your
       endpoint configuration
@@ -836,17 +845,21 @@ defmodule Phoenix.Endpoint do
 
       For example:
 
-          socket "/socket", AppWeb.UserSocket,
+      ```
+        socket "/socket", AppWeb.UserSocket,
             websocket: [
               connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri, session: [store: :cookie]]
             ]
+      ```
 
       With arbitrary keywords:
 
-          socket "/socket", AppWeb.UserSocket,
+      ```
+        socket "/socket", AppWeb.UserSocket,
             websocket: [
               connect_info: [:uri, custom_value: "abcdef"]
             ]
+      ```
 
   ## Websocket configuration
 
@@ -857,6 +870,11 @@ defmodule Phoenix.Endpoint do
 
     * `:max_frame_size` - the maximum allowed frame size in bytes,
       defaults to "infinity"
+
+    * `:fullsweep_after` - the maximum number of garbage collections
+      before forcing a fullsweep for the socket process. You can set
+      it to `0` to force more frequent cleanups of your websocket
+      transport processes. Setting this option requires Erlang/OTP 24
 
     * `:compress` - whether to enable per message compression on
       all data frames, defaults to false

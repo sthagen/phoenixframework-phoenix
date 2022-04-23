@@ -61,7 +61,8 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
           raise "aborting due to nil port"
         end
 
-        opts = [port: port_to_integer(port), otp_app: otp_app] ++ :proplists.delete(:port, opts)
+        # Ranch options are read from the top, so we keep the user opts first.
+        opts = :proplists.delete(:port, opts) ++ [port: port_to_integer(port), otp_app: otp_app]
         child_spec(scheme, endpoint, opts)
       end
 
@@ -93,11 +94,11 @@ defmodule Phoenix.Endpoint.Cowboy2Adapter do
     # to plug.HTTP and plug.HTTPS and overridable by users.
     case apply(m, f, a) do
       {:ok, pid} ->
-        Logger.info(fn -> info(scheme, endpoint, ref) end)
+        Logger.info(info(scheme, endpoint, ref))
         {:ok, pid}
 
       {:error, {:shutdown, {_, _, {{_, {:error, :eaddrinuse}}, _}}}} = error ->
-        Logger.error [info(scheme, endpoint, ref), " failed, port already in use"]
+        Logger.error([info(scheme, endpoint, ref), " failed, port already in use"])
         error
 
       {:error, _} = error ->

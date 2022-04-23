@@ -9,7 +9,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
   The first argument is the context module followed by the schema module
   and its plural name (used as the schema table name).
 
-  Additional information is available in the
+  Additional information and security considerations are detailed in the
   [`mix phx.gen.auth` guide](mix_phx_gen_auth.html).
 
   ## Password hashing
@@ -41,7 +41,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
 
       $ mix phx.gen.auth Accounts User users --web Warehouse
 
-  Which would generate the controllers, views, templates and associated tests in nested in the `MyAppWeb.Warehouse` namespace:
+  Which would generate the controllers, views, templates and associated tests nested in the `MyAppWeb.Warehouse` namespace:
 
     * `lib/my_app_web/controllers/warehouse/user_auth.ex`
     * `lib/my_app_web/controllers/warehouse/user_confirmation_controller.ex`
@@ -524,7 +524,7 @@ defmodule Mix.Tasks.Phx.Gen.Auth do
         $ mix ecto.migrate
 
     Once you are ready, visit "/#{context.schema.plural}/register"
-    to create your account and then access to "/dev/mailbox" to
+    to create your account and then access "/dev/mailbox" to
     see the account confirmation email.
     """)
 

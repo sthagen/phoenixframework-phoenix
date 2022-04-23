@@ -4,6 +4,34 @@ See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0
 
 Phoenix v1.6 requires Elixir v1.9+.
 
+## 1.6.6 (2022-01-04)
+
+### Bug Fixes
+  * [Endpoint] Fix `check_origin: :conn` failing to match scheme
+
+## 1.6.5 (2021-12-16)
+
+### Enhancements
+  * [Endpoint] Support `check_origin: :conn` to enforce origin on the connection's host, port, and scheme
+
+## 1.6.4 (2021-12-08)
+
+### Bug Fixes
+  * Fix incorrect `phx.gen.release` output
+
+## 1.6.3 (2021-12-07)
+
+### Enhancements
+  * Add new `phx.gen.release` task for release and docker based deployments
+  * Add `fullsweep_after` option to the websocket transport
+  * Add `:force_watchers` option to `Phoenix.Endpoint` for running watchers even when web server is not started
+
+### Bug Fixes
+  * Fix Endpoint `log: false` failing to disable logging
+
+### JavaScript Client Bug Fixes
+  * Do not attempt to reconnect automatically if client gracefully closes connection
+
 ## 1.6.2 (2021-10-08)
 
 ### Bug Fixes
@@ -81,7 +109,9 @@ Phoenix v1.6 requires Elixir v1.9+.
 ### Deprecations
   * [mix compile.phoenix] Adding the `:phoenix` compiler to your `mix.exs` (`compilers: [:phoenix] ++ Mix.compilers()`) is no longer required from Phoenix v1.6 forward if you are running on Elixir v1.11. Remove it from your `mix.exs` and you should gain faster compilation times too
   * [Endpoint] Phoenix now requires Cowboy v2.7+
-  * [View] `@view_module` is deprecated in favor of `Phoenix.Controller.view_module/1` and `@view_template` is deprecated in favor of `Phoenix.Controller.view_template/1`
+
+### Breaking changes
+  * [View] `@view_module` and `@view_template` are no longer set. Use `Phoenix.Controller.view_module/1` and `Phoenix.Controller.view_template/1` respectively, or pass explicit assigns from `Phoenix.View.render`.
 
 ## v1.5
 

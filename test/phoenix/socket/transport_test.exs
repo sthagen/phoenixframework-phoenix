@@ -1,5 +1,3 @@
-System.put_env("TRANSPORT_TEST_HOST", "host.com")
-
 defmodule Phoenix.Socket.TransportTest do
   use ExUnit.Case, async: true
   use RouterHelper
@@ -12,7 +10,7 @@ defmodule Phoenix.Socket.TransportTest do
 
   Application.put_env :phoenix, __MODULE__.Endpoint,
     force_ssl: [],
-    url: [host: {:system, "TRANSPORT_TEST_HOST"}],
+    url: [host: "host.com"],
     check_origin: ["//endpoint.com"],
     secret_key_base: @secret_key_base
 
@@ -51,10 +49,12 @@ defmodule Phoenix.Socket.TransportTest do
   ## Check origin
 
   describe "check_origin/4" do
-    defp check_origin(origin, opts) do
-      conn = conn(:get, "/") |> put_req_header("origin", origin)
+    defp check_origin(%Plug.Conn{} = conn, origin, opts) do
+      conn = put_req_header(conn, "origin", origin)
       Transport.check_origin(conn, make_ref(), Endpoint, opts)
     end
+
+    defp check_origin(origin, opts), do: check_origin(conn(:get, "/"), origin, opts)
 
     test "does not check origin if disabled" do
       refute check_origin("/", check_origin: false).halted
@@ -129,6 +129,22 @@ defmodule Phoenix.Socket.TransportTest do
       refute check_origin("file://", check_origin: mfa).halted
       refute check_origin("null", check_origin: mfa).halted
       refute check_origin("", check_origin: mfa).halted
+    end
+
+    test "checks origin against :conn" do
+      conn = %Plug.Conn{conn(:get, "/") | host: "example.com", scheme: :http, port: 80}
+      refute check_origin(conn, "http://example.com", check_origin: :conn).halted
+
+      assert check_origin(conn, "https://example.com", check_origin: :conn).halted
+      assert check_origin(conn, "ws://example.com", check_origin: :conn).halted
+      assert check_origin(conn, "wss://example.com", check_origin: :conn).halted
+      assert check_origin(conn, "http://www.example.com", check_origin: :conn).halted
+      assert check_origin(conn, "http://www.another.com", check_origin: :conn).halted
+
+      conn = %Plug.Conn{conn(:get, "/") | host: "example.com", scheme: :https, port: 443}
+      refute check_origin(conn, "https://example.com", check_origin: :conn).halted
+      assert check_origin(conn, "http://example.com", check_origin: :conn).halted
+      assert check_origin(conn, "https://example.com:4000", check_origin: :conn).halted
     end
 
     test "does not halt invalid URIs when check_origin is disabled" do

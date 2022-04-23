@@ -105,7 +105,7 @@ erlang_version=24.0.3
 
 # Invoke assets.deploy defined in your mix.exs to deploy assets with esbuild
 # Note we nuke the esbuild executable from the image
-hook_post_compile="eval mix assets.deploy && rm -f _build/esbuild"
+hook_post_compile="eval mix assets.deploy && rm -f _build/esbuild*"
 ```
 
 Finally, let's tell the build pack how to start our webserver. Create a file named `Procfile` at the root of your project:
@@ -131,7 +131,7 @@ When using this buildpack, you want to delegate all asset bundling to `npm`. So 
 {
   ...
   "scripts": {
-    "deploy": "cd .. && mix assets.deploy && rm -f _build/esbuild"
+    "deploy": "cd .. && mix assets.deploy && rm -f _build/esbuild*"
   }
   ...
 }
@@ -165,7 +165,7 @@ url: [scheme: "https", host: "mysterious-meadow-6277.herokuapp.com", port: 443],
 force_ssl: [rewrite_on: [:x_forwarded_proto]],
 ```
 
-Then open up your `config/runtime.xs` (formerly `config/prod.secret.exs`) and uncomment the `# ssl: true,` line in your repository configuration. It will look like this:
+Then open up your `config/runtime.exs` (formerly `config/prod.secret.exs`) and uncomment the `# ssl: true,` line in your repository configuration. It will look like this:
 
 ```elixir
 config :hello, Hello.Repo,

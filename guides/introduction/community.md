@@ -12,7 +12,7 @@ There are a number of places to connect with community members at all experience
 
   * Read about [bug reports](https://github.com/phoenixframework/phoenix/blob/master/CONTRIBUTING.md#bug-reports) or open an issue in the Phoenix [issue tracker](https://github.com/phoenixframework/phoenix/issues).
 
-  * Ask or answer questions about Phoenix on [Elixir Forum](https://elixirforum.com/c/phoenix-forum) or [Stack Overflow](http://stackoverflow.com/questions/tagged/phoenix-framework).
+  * Ask or answer questions about Phoenix on [Elixir Forum](https://elixirforum.com/c/phoenix-forum) or [Stack Overflow](https://stackoverflow.com/questions/tagged/phoenix-framework).
 
   * To discuss new features in the framework, email the [phoenix-core mailing list](https://groups.google.com/group/phoenix-core).
 
@@ -38,6 +38,8 @@ There are a number of places to connect with community members at all experience
   * [Phoenix LiveView Free Course (by The Pragmatic Studio - 2020)](https://pragmaticstudio.com/courses/phoenix-liveview)
 
   * [Groxio LiveView: Self Study Program (by Bruce Tate - 2020)](https://grox.io/language/liveview/course)
+  
+  * [Alchemist Camp: Learn Elixir and Phoenix by building (2018-2022)](https://alchemist.camp/episodes)
 
   * [The Complete Elixir and Phoenix Bootcamp Master Functional Programming Techniques with Elixir and Phoenix while Learning to Build Compelling Web Applications (by Stephen Grider - 2017)](https://www.udemy.com/the-complete-elixir-and-phoenix-bootcamp-and-tutorial/)
 

@@ -18,10 +18,10 @@ defmodule Mix.Tasks.Phx.Gen.Live do
   table name), and an optional list of attributes as their respective names and
   types.  See `mix help phx.gen.schema` for more information on attributes.
 
-  When this command is run for the first time, a `ModalComponent` and
-  `LiveHelpers` module will be created, along with the resource level
-  LiveViews and components, including `UserLive.Index`, `UserLive.Show`,
-  and `UserLive.FormComponent` modules for the new resource.
+  When this command is run for the first time, a `LiveHelpers` module will be
+  created, along with the resource level LiveViews and components, including
+  `UserLive.Index`, `UserLive.Show`, and `UserLive.FormComponent` modules for
+  the new resource.
 
   > Note: A resource may also be split
   > over distinct contexts (such as `Accounts.User` and `Payments.User`).
@@ -33,8 +33,19 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     * a LiveView in `lib/app_web/live/user_live/show.ex`
     * a LiveView in `lib/app_web/live/user_live/index.ex`
     * a LiveComponent in `lib/app_web/live/user_live/form_component.ex`
-    * a LiveComponent in `lib/app_web/live/modal_component.ex`
-    * a helpers module in `lib/app_web/live/live_helpers.ex`
+    * a helpers module in `lib/app_web/live/live_helpers.ex` with a modal
+
+  After file generation is complete, there will be output regarding required
+  updates to the lib/app_web/router.ex file.
+
+      Add the live routes to your browser scope in lib/app_web/router.ex:
+
+        live "/users", UserLive.Index, :index
+        live "/users/new", UserLive.Index, :new
+        live "/users/:id/edit", UserLive.Index, :edit
+
+        live "/users/:id", UserLive.Show, :show
+        live "/users/:id/show/edit", UserLive.Show, :edit
 
   ## The context app
 
@@ -131,7 +142,6 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       {:eex, "index.html.heex",           Path.join([web_prefix, "live", web_path, live_subdir, "index.html.heex"])},
       {:eex, "show.html.heex",            Path.join([web_prefix, "live", web_path, live_subdir, "show.html.heex"])},
       {:eex, "live_test.exs",             Path.join([test_prefix, "live", web_path, "#{schema.singular}_live_test.exs"])},
-      {:new_eex, "modal_component.ex",    Path.join([web_prefix, "live", "modal_component.ex"])},
       {:new_eex, "live_helpers.ex",       Path.join([web_prefix, "live", "live_helpers.ex"])},
     ]
   end
@@ -209,6 +219,18 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       """
     end
     if context.generate?, do: Gen.Context.print_shell_instructions(context)
+    maybe_print_upgrade_info()
+  end
+
+  defp maybe_print_upgrade_info do
+    unless Code.ensure_loaded?(Phoenix.LiveView.JS) do
+      Mix.shell().info """
+
+      You must update :phoenix_live_view to v0.17 or later and
+      :phoenix_live_dashboard to v0.6 or later to use the features
+      in this generator.
+      """
+    end
   end
 
   defp live_route_instructions(schema) do

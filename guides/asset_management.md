@@ -30,13 +30,11 @@ If you want to import JavaScript dependencies, you have two options to add them 
 import "../css/app.css"
 ```
 
-However, if you want to use a CSS framework, such as SASS or Tailwind, you will need to use a separate tool. Here are some options to do so:
+However, if you want to use a CSS framework, you will need to use a separate tool. Here are some options to do so:
+
+  * Use [standalone Tailwind](https://github.com/phoenixframework/tailwind) or [standalone SASS](https://github.com/CargoSense/dart_sass). Both similar to `esbuild`.
 
   * You can use `esbuild` plugins (requires `npm`). See the "Esbuild plugins" section below
-
-  * If you want SASS, you can bring [standalone SASS](https://github.com/CargoSense/dart_sass) to your project, without a need for external dependencies (similar to esbuild).
-
-  * You can bring Node.JS + `npm` to your application and install any package you want, typically working directly with their command line interface. See [this pull request on how to add Alpine + Tailwind](https://github.com/josevalim/phx_esbuild_demo/pull/3).
 
 Don't forget to remove the `import "../css/app.css"` from your JavaScript file when doing so.
 
@@ -61,7 +59,7 @@ error: Could not resolve "/images/bg.png" (mark it as external to exclude it fro
 Given the images are already managed by Phoenix, you need to mark all resources from `/images` (and also `/fonts`) as external, as the error message says. This is what Phoenix does by default for new apps since v1.6.1+. In your `config/config.exs`, you will find:
 
 ```elixir
-args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
+args: ~w(js/app.js --bundle --target=es2017 --outdir=../priv/static/assets --external:/fonts/* --external:/images/*),
 ```
 
 If you need to reference other directories, you need to update the arguments above accordingly. Note running `mix phx.digest` will create digested files for all of the assets in `priv/static`, so your images and fonts are still cache-busted.
@@ -106,7 +104,7 @@ const plugins = [
 let opts = {
   entryPoints: ['js/app.js'],
   bundle: true,
-  target: 'es2016',
+  target: 'es2017',
   outdir: '../priv/static/assets',
   logLevel: 'info',
   loader,

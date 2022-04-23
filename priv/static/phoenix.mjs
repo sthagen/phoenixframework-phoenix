@@ -934,11 +934,12 @@ var Socket = class {
     }, 150 * tries);
   }
   onConnClose(event) {
+    let closeCode = event && event.code;
     if (this.hasLogger())
       this.log("transport", "close", event);
     this.triggerChanError();
     clearTimeout(this.heartbeatTimer);
-    if (!this.closeWasClean) {
+    if (!this.closeWasClean && closeCode !== 1e3) {
       this.reconnectTimer.scheduleTimeout();
     }
     this.stateChangeCallbacks.close.forEach(([, callback]) => callback(event));
@@ -1072,4 +1073,4 @@ export {
   serializer_default as Serializer,
   Socket
 };
-//# sourceMappingURL=phoenix.esm.js.map
+//# sourceMappingURL=phoenix.mjs.map

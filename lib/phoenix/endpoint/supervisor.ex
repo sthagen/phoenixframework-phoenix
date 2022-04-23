@@ -10,15 +10,18 @@ defmodule Phoenix.Endpoint.Supervisor do
   Starts the endpoint supervision tree.
   """
   def start_link(otp_app, mod, opts \\ []) do
-    case Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
-      {:ok, _} = ok ->
-        warmup(mod)
-        log_access_url(otp_app, mod, opts)
-        browser_open(otp_app, mod)
-        ok
+    with {:ok, pid} = ok <- Supervisor.start_link(__MODULE__, {otp_app, mod, opts}, name: mod) do
+      # We don't use the defaults in the checks below
+      conf = Keyword.merge(Application.get_env(otp_app, mod, []), opts)
+      warmup(mod)
+      log_access_url(mod, conf)
+      browser_open(mod, conf)
 
-      {:error, _} = error ->
-        error
+      measurements = %{system_time: System.system_time()}
+      metadata = %{pid: pid, config: conf, module: mod, otp_app: otp_app}
+      :telemetry.execute([:phoenix, :endpoint, :init], measurements, metadata)
+
+      ok
     end
   end
 
@@ -99,6 +102,10 @@ defmodule Phoenix.Endpoint.Supervisor do
       Phoenix.CodeReloader.Server.check_symlinks()
     end
 
+    # TODO: Remove this once {:system, env_var} tuples are removed
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :url)
+    warn_on_deprecated_system_env_tuples(otp_app, mod, conf, :static_url)
+
     children =
       config_children(mod, secret_conf, default_conf) ++
       pubsub_children(mod, conf) ++
@@ -156,7 +163,7 @@ defmodule Phoenix.Endpoint.Supervisor do
   end
 
   defp watcher_children(_mod, conf, server?) do
-    if server? do
+    if server? || conf[:force_watchers] do
       Enum.map(conf[:watchers], &{Phoenix.Endpoint.Watcher, &1})
     else
       []
@@ -178,36 +185,40 @@ defmodule Phoenix.Endpoint.Supervisor do
   Checks if Endpoint's web server has been configured to start.
   """
   def server?(otp_app, endpoint) when is_atom(otp_app) and is_atom(endpoint) do
-    otp_app
-    |> config(endpoint)
-    |> server?()
+    server?(Application.get_env(otp_app, endpoint, []))
   end
-  def server?(conf) when is_list(conf) do
-    Keyword.get(conf, :server, Application.get_env(:phoenix, :serve_endpoints, false))
+
+  defp server?(conf) when is_list(conf) do
+    Keyword.get_lazy(conf, :server, fn ->
+      Application.get_env(:phoenix, :serve_endpoints, false)
+    end)
   end
 
   defp defaults(otp_app, module) do
-    [otp_app: otp_app,
+    [
+      otp_app: otp_app,
 
-     # Compile-time config
-     code_reloader: false,
-     debug_errors: false,
-     render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
+      # Compile-time config
+      code_reloader: false,
+      debug_errors: false,
+      render_errors: [view: render_errors(module), accepts: ~w(html), layout: false],
 
-     # Runtime config
-     cache_static_manifest: nil,
-     check_origin: true,
-     http: false,
-     https: false,
-     reloadable_apps: nil,
-     reloadable_compilers: [:gettext, :elixir],
-     secret_key_base: nil,
-     static_url: nil,
-     url: [host: "localhost", path: "/"],
-     cache_manifest_skip_vsn: false,
+      # Runtime config
+      cache_static_manifest: nil,
+      check_origin: true,
+      http: false,
+      https: false,
+      reloadable_apps: nil,
+      reloadable_compilers: [:gettext, :elixir],
+      secret_key_base: nil,
+      static_url: nil,
+      url: [host: "localhost", path: "/"],
+      cache_manifest_skip_vsn: false,
 
-     # Supervisor config
-     watchers: []]
+      # Supervisor config
+      watchers: [],
+      force_watchers: false
+   ]
   end
 
   defp render_errors(module) do
@@ -348,14 +359,42 @@ defmodule Phoenix.Endpoint.Supervisor do
     raise ArgumentError, "expected a path starting with a single / but got #{inspect path}"
   end
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
+  # TODO: Remove the first function clause once {:system, env_var} tuples are removed
   defp host_to_binary({:system, env_var}), do: host_to_binary(System.get_env(env_var))
   defp host_to_binary(host), do: host
 
-  # TODO: Deprecate {:system, env_var} once we require Elixir v1.9+
+  # TODO: Remove the first function clause once {:system, env_var} tuples are removed
   defp port_to_integer({:system, env_var}), do: port_to_integer(System.get_env(env_var))
   defp port_to_integer(port) when is_binary(port), do: String.to_integer(port)
   defp port_to_integer(port) when is_integer(port), do: port
+
+  defp warn_on_deprecated_system_env_tuples(otp_app, mod, conf, key) do
+    deprecated_configs = Enum.filter(conf[key] || [], &match?({_, {:system, _}}, &1))
+
+    if Enum.any?(deprecated_configs) do
+      deprecated_config_lines = for {k, v} <- deprecated_configs, do: "#{k}: #{inspect(v)}"
+      runtime_exs_config_lines = for {key, {:system, env_var}} <- deprecated_configs, do: ~s|#{key}: System.get_env("#{env_var}")|
+
+      Logger.warn """
+      #{inspect(key)} configuration containing {:system, env_var} tuples for #{inspect(mod)} is deprecated.
+
+      Configuration with deprecated values:
+
+          config #{inspect(otp_app)}, #{inspect(mod)},
+            #{key}: [
+              #{deprecated_config_lines |> Enum.join(",\r\n        ")}
+            ]
+
+      Move this configuration into config/runtime.exs and replace the {:system, env_var} tuples
+      with System.get_env/1 function calls:
+
+          config #{inspect(otp_app)}, #{inspect(mod)},
+            #{key}: [
+              #{runtime_exs_config_lines |> Enum.join(",\r\n        ")}
+            ]
+      """
+    end
+  end
 
   @doc """
   Invoked to warm up caches on start and config change.
@@ -431,14 +470,14 @@ defmodule Phoenix.Endpoint.Supervisor do
     end
   end
 
-  defp log_access_url(otp_app, endpoint, opts) do
-    if Keyword.get(opts, :log_access_url, true) && server?(otp_app, endpoint) do
+  defp log_access_url(endpoint, conf) do
+    if Keyword.get(conf, :log_access_url, true) && server?(conf) do
       Logger.info("Access #{inspect(endpoint)} at #{endpoint.url()}")
     end
   end
 
-  defp browser_open(otp_app, endpoint) do
-    if Application.get_env(:phoenix, :browser_open) && server?(otp_app, endpoint) do
+  defp browser_open(endpoint, conf) do
+    if Application.get_env(:phoenix, :browser_open) && server?(conf) do
       url = endpoint.url()
 
       {cmd, args} =

@@ -33,7 +33,7 @@ defmodule Mix.Tasks.Phx.New do
 
     * `--no-assets` - do not generate the assets folder.
       When choosing this option, you will need to manually
-      handle JavaScript/CSS if building HTML apps.
+      handle JavaScript/CSS if building HTML apps
 
     * `--no-ecto` - do not generate Ecto files
 
@@ -97,7 +97,7 @@ defmodule Mix.Tasks.Phx.New do
   ```
 
   You can read more about umbrella projects using the
-  official [Elixir guide](http://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-apps.html#umbrella-projects)
+  official [Elixir guide](https://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-apps.html#umbrella-projects)
   """
   use Mix.Task
   alias Phx.New.{Generator, Project, Single, Umbrella, Web, Ecto}
@@ -216,7 +216,7 @@ defmodule Mix.Tasks.Phx.New do
   end
 
   defp rebar_available? do
-    Mix.Rebar.rebar_cmd(:rebar) && Mix.Rebar.rebar_cmd(:rebar3)
+    Mix.Rebar.rebar_cmd(:rebar3)
   end
 
   defp print_missing_steps(steps) do

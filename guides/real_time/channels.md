@@ -159,7 +159,7 @@ This is useful to broadcast messages on channel and also for application develop
 The PubSub system takes care of getting messages from one node to another so that they can be sent to all subscribers across the cluster.
 By default, this is done using [Phoenix.PubSub.PG2](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.PG2.html), which uses native BEAM messaging.
 
-If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](http://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
+If your deployment environment does not support distributed Elixir or direct communication between servers, Phoenix also ships with a [Redis Adapter](https://hexdocs.pm/phoenix_pubsub_redis/Phoenix.PubSub.Redis.html) that uses Redis to exchange PubSub data. Please see the [Phoenix.PubSub docs](https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html) for more information.
 
 ### Client Libraries
 
@@ -168,7 +168,7 @@ The following libraries exist today, and new ones are always welcome.
 
 #### Official
 
-Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [phoenix.js](https://github.com/phoenixframework/phoenix/blob/master/assets/js/phoenix.js).
+Phoenix ships with a JavaScript client that is available when generating a new Phoenix project. The documentation for the JavaScript module is available at [https://hexdocs.pm/phoenix/js/](https://hexdocs.pm/phoenix/js/); the code is in [multiple js files](https://github.com/phoenixframework/phoenix/blob/master/assets/js/phoenix/).
 
 #### 3rd Party
 
@@ -267,18 +267,18 @@ channel.join()
 export default socket
 ```
 
-After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment the last line in `assets/js/app.js`.
+After that, we need to make sure `assets/js/user_socket.js` gets imported into our application JavaScript file. To do that, uncomment this line in `assets/js/app.js`.
 
 ```javascript
 // ...
-import socket from "./user_socket"
+import "./user_socket.js"
 ```
 
 Save the file and your browser should auto refresh, thanks to the Phoenix live reloader. If everything worked, we should see "Joined successfully" in the browser's JavaScript console. Our client and server are now talking over a persistent connection. Now let's make it useful by enabling chat.
 
 In `lib/hello_web/templates/page/index.html.heex`, we'll replace the existing code with a container to hold our chat messages, and an input field to send them:
 
-```html
+```heex
 <div id="messages" role="log" aria-live="polite"></div>
 <input id="chat-input" type="text">
 ```
@@ -410,7 +410,7 @@ Now our `conn.assigns` contains the `current_user` and `user_token`.
 
 Next we need to pass this token to JavaScript. We can do so inside a script tag in `web/templates/layout/app.html.heex` right above the app.js script, as follows:
 
-```html
+```heex
 <script>window.userToken = "<%= assigns[:user_token] %>";</script>
 <script src={Routes.static_path(@conn, "/assets/app.js")}></script>
 ```
@@ -481,4 +481,4 @@ Phoenix uses an at-most-once strategy when sending messages to clients. If the c
 
 To see an example of the application we just built, checkout the project [phoenix_chat_example](https://github.com/chrismccord/phoenix_chat_example).
 
-You can also see a live demo at <http://phoenixchat.herokuapp.com/>.
+You can also see a live demo at <https://phoenixchat.herokuapp.com/>.

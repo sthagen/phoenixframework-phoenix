@@ -7,6 +7,12 @@ defmodule Phoenix.Logger do
   Phoenix uses the `:telemetry` library for instrumentation. The following events
   are published by Phoenix with the following measurements and metadata:
 
+    * `[:phoenix, :endpoint, :init]` - dispatched by `Phoenix.Endpoint` after your
+      Endpoint supervision tree successfully starts
+      * Measurement: `%{system_time: system_time}`
+      * Metadata: `%{pid: pid(), config: Keyword.t(), module: module(), otp_app: atom()}`
+      * Disable logging: This event is not logged
+
     * `[:phoenix, :endpoint, :start]` - dispatched by `Plug.Telemetry` in your endpoint,
       usually after code reloading
       * Measurement: `%{system_time: system_time}`
@@ -28,7 +34,7 @@ defmodule Phoenix.Logger do
       * Measurement: `%{system_time: System.system_time}`
       * Metadata: `%{conn: Plug.Conn.t, route: binary, plug: module, plug_opts: term, path_params: map, pipe_through: [atom], log: Logger.level | false}`
       * Disable logging: Pass `log: false` to the router macro, for example: `get("/page", PageController, :index, log: false)`
-      * Configure log level dynamically: `get("/page", PageController, :index, log: {Mod, Fun, Args}`
+      * Configure log level dynamically: `get("/page", PageController, :index, log: {Mod, Fun, Args})`
 
     * `[:phoenix, :router_dispatch, :exception]` - dispatched by `Phoenix.Router`
       after exceptions on dispatching a route
@@ -113,7 +119,7 @@ defmodule Phoenix.Logger do
   ## Disabling
 
   When you are using custom logging system it is not always desirable to enable
-  `#{inspect __MODULE__}` by default. You can always disable this in general by:
+  `#{inspect(__MODULE__)}` by default. You can always disable this in general by:
 
       config :phoenix, :logger, false
   """
@@ -192,6 +198,7 @@ defmodule Phoenix.Logger do
 
   defp keep_values(_other, _params), do: "[FILTERED]"
 
+  defp log_level(nil, _conn), do: :info
   defp log_level(level, _conn) when is_atom(level), do: level
 
   defp log_level({mod, fun, args}, conn) when is_atom(mod) and is_atom(fun) and is_list(args) do
@@ -202,7 +209,7 @@ defmodule Phoenix.Logger do
 
   @doc false
   def phoenix_endpoint_start(_, _, %{conn: conn} = metadata, _) do
-    case log_level(metadata[:options][:log] || :info, conn) do
+    case log_level(metadata[:options][:log], conn) do
       false ->
         :ok
 
@@ -216,7 +223,7 @@ defmodule Phoenix.Logger do
 
   @doc false
   def phoenix_endpoint_stop(_, %{duration: duration}, %{conn: conn} = metadata, _) do
-    case log_level(metadata[:options][:log] || :info, conn) do
+    case log_level(metadata[:options][:log], conn) do
       false ->
         :ok
 
@@ -260,19 +267,19 @@ defmodule Phoenix.Logger do
   def phoenix_router_dispatch_start(_, _, %{log: false}, _), do: :ok
 
   def phoenix_router_dispatch_start(_, _, metadata, _) do
-    %{log: level, conn: conn} = metadata
+    %{log: level, conn: conn, plug: plug} = metadata
     level = log_level(level, conn)
+    log_module = metadata[:log_module] || plug
 
     Logger.log(level, fn ->
       %{
         pipe_through: pipe_through,
-        plug: plug,
         plug_opts: plug_opts
       } = metadata
 
       [
         "Processing with ",
-        inspect(plug),
+        inspect(log_module),
         maybe_action(plug_opts),
         ?\n,
         "  Parameters: ",

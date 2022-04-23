@@ -125,10 +125,12 @@ Finally, there is a `lib/hello_web/gettext.ex` file which provides international
 
 ## The assets directory
 
-The `assets` directory contains source files related to front-end assets, such as JavaScript and CSS. Since Phoenix v1.6, we use the [`esbuild`](https://github.com/evanw/esbuild/) to compile assets, which is managed by [`esbuild`](https://github.com/phoenixframework/esbuild) Elixir package. The integration with `esbuild` is baked into your app. The relevant config can be found in your `config/config.exs` file.
+The `assets` directory contains source files related to front-end assets, such as JavaScript and CSS. Since Phoenix v1.6, we use [`esbuild`](https://github.com/evanw/esbuild/) to compile assets, which is managed by the [`esbuild`](https://github.com/phoenixframework/esbuild) Elixir package. The integration with `esbuild` is baked into your app. The relevant config can be found in your `config/config.exs` file.
 
 Your other static assets are placed in the `priv/static` folder, where `priv/static/assets` is kept for generated assets. Everything in `priv/static` is served by the `Plug.Static` plug configured in `lib/hello_web/endpoint.ex`.  When running in dev mode (`MIX_ENV=dev`), Phoenix watches for any changes you make in the `assets` directory, and then takes care of updating your front end application in your browser as you work.
 
-**NB:** When you first create your Phoenix app using `mix phx.new` it is possible to specify options that will affect the presence and layout of the `assets` directory.  In fact, Phoenix apps can bring their own front end tools or not have a front-end at all (handy if you're writing an API for example).  For more information you can run `mix help phx.new` or see the documentation in [Mix tasks](mix_tasks.html).
+Note that when you first create your Phoenix app using `mix phx.new` it is possible to specify options that will affect the presence and layout of the `assets` directory.  In fact, Phoenix apps can bring their own front end tools or not have a front-end at all (handy if you're writing an API for example).  For more information you can run `mix help phx.new` or see the documentation in [Mix tasks](mix_tasks.html).
 
 If the default esbuild integration does not cover your needs, for example because you want to use another build tool, you can switch to a [custom assets build](asset_management.html#custom_builds).
+
+As for CSS, Phoenix ships with a handful of custom styles as well as the [Milligram CSS Framework](https://milligram.io/), providing a minimal setup for projects. You may move to any CSS framework of your choice. Additional references can be found in the [asset management](asset_management.md#css) guide.

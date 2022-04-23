@@ -50,9 +50,9 @@ The password hashing mechanism defaults to `bcrypt` for Unix systems and `pbkdf2
 
 The password hashing mechanism can be overridden with the `--hashing-lib` option. The following values are supported:
 
-    * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
-    * `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
-    * `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
+  * `bcrypt` - [bcrypt_elixir](https://hex.pm/packages/bcrypt_elixir)
+  * `pbkdf2` - [pbkdf2_elixir](https://hex.pm/packages/pbkdf2_elixir)
+  * `argon2` - [argon2_elixir](https://hex.pm/packages/argon2_elixir)
 
 We recommend developers to consider using `argon2`, which is the most robust of all 3. The downside is that `argon2` is quite CPU and memory intensive, and you will need more powerful instances to run your applications on.
 
@@ -82,9 +82,11 @@ Note that whenever the password changes (either via reset password or directly),
 
 ### User Enumeration attacks
 
-A user enumeration attack allows an attacker to enumerate all emails registered in the application. For example, if trying to log in with a registered email and a wrong password returns a different error than trying to log in with an email that was never registered, an attacker could use this discrepancy to find out which emails have accounts.
+A user enumeration attack allows someone to check if an email is registered in the application. The generated authentication code does not attempt to protect from such checks. For instance, when you register an account, if the email is already registered, the code will notify the user the email is already registered.
 
-The generated authentication code protects against enumeration attacks on all endpoints, except in the registration and update email forms. If your application is really sensitive to enumeration attacks, you need to implement your own registration workflow, which tends to be very different from the workflow for most applications.
+If your application is sensitive to enumeration attacks, you need to implement your own workflows, which tends to be very different from most applications, as you need to carefully balance security and user experience.
+
+Furthermore, if you are concerned about enumeration attacks, beware of timing attacks too. For example, registering a new account typically involves additional work (such as writing to the database, sending emails, etc) compared to when an account already exists. Someone could measure the time taken to execute those additional tasks to enumerate emails. This applies to all endpoints (registration, confirmation, password recovery, etc.) that may send email, in-app notifications, etc.
 
 ### Case sensitiveness
 
@@ -98,7 +100,7 @@ The generated tests run concurrently if you are using a database that supports c
 
 ## More about `mix phx.gen.auth`
 
-Check out `mix phx.gen.auth` for more details, such as using different password hashing library, customizing the web module namespace, generating binary id type, configuring the default options, and using custom table names.  
+Check out `mix phx.gen.auth` for more details, such as using different password hashing library, customizing the web module namespace, generating binary id type, configuring the default options, and using custom table names.
 
 ## Additional resources
 
