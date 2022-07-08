@@ -151,13 +151,25 @@ export default class Socket {
   }
 
   /**
+   * Returns the LongPoll transport reference
+   */
+  getLongPollTransport(){ return LongPoll }
+
+  /**
    * Disconnects and replaces the active transport
    *
    * @param {Function} newTransport - The new transport class to instantiate
    *
    */
   replaceTransport(newTransport){
-    this.disconnect()
+    this.connectClock++
+    this.closeWasClean = true
+    this.reconnectTimer.reset()
+    this.sendBuffer = []
+    if(this.conn){
+      this.conn.close()
+      this.conn = null
+    }
     this.transport = newTransport
   }
 
@@ -206,12 +218,13 @@ export default class Socket {
    * `new Socket("/socket", {params: {user_id: userToken}})`.
    */
   connect(params){
-    this.connectClock++
     if(params){
       console && console.log("passing params to connect is deprecated. Instead pass :params to the Socket constructor")
       this.params = closure(params)
     }
     if(this.conn){ return }
+
+    this.connectClock++
     this.closeWasClean = false
     this.conn = new this.transport(this.endPointURL())
     this.conn.binaryType = this.binaryType
