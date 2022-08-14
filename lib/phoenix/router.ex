@@ -273,7 +273,7 @@ defmodule Phoenix.Router do
   Perhaps more importantly, it is also very common to define pipelines specific
   to authentication and authorization. For example, you might have a pipeline
   that requires all users are authenticated. Another pipeline may enforce only
-  admin users can acess certain routes.
+  admin users can access certain routes.
 
   Once your pipelines are defined, you reuse the pipelines in the desired
   scopes, grouping your routes around their pipelines. For example, imagine
@@ -613,19 +613,24 @@ defmodule Phoenix.Router do
       dispatch: dispatch,
       verb_match: verb_match,
       path_params: path_params,
-      host: host
+      hosts: hosts
     } = expr
 
-    [clause] =
-      quote do
-        unquote(verb_match), unquote(host) ->
-          {unquote(build_metadata(route, path_params)),
-           fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} -> unquote(prepare) end,
-           &unquote(Macro.var(pipe_name, __MODULE__))/1,
-           unquote(dispatch)}
-      end
+    new_acc_clauses =
+      Enum.reduce(hosts, acc_clauses, fn host, acc_clauses ->
+        [clause] =
+          quote do
+            unquote(verb_match), unquote(host) ->
+              {unquote(build_metadata(route, path_params)),
+              fn var!(conn, :conn), %{path_params: var!(path_params, :conn)} -> unquote(prepare) end,
+              &unquote(Macro.var(pipe_name, __MODULE__))/1,
+              unquote(dispatch)}
+          end
 
-    {[clause | acc_clauses], acc_pipes, known_pipes}
+        [clause | acc_clauses]
+      end)
+
+    {new_acc_clauses, acc_pipes, known_pipes}
   end
 
   defp build_metadata(route, path_params) do
@@ -996,7 +1001,7 @@ defmodule Phoenix.Router do
       false, it resets the nested helper scopes.
     * `:alias` - an alias (atom) containing the controller scope. When set to
       false, it resets all nested aliases.
-    * `:host` - a string containing the host scope, or prefix host scope,
+    * `:host` - a string or list of strings containing the host scope, or prefix host scope,
       ie `"foo.bar.com"`, `"foo."`
     * `:private` - a map of private data to merge into the connection when a route matches
     * `:assigns` - a map of data to merge into the connection when a route matches
