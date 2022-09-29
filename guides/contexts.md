@@ -65,7 +65,7 @@ Remember to update your repository by running migrations:
 
 > Note: we are starting with the basics for modeling an ecommerce system. In practice, modeling such systems yields more complex relationships such as product variants, optional pricing, multiple currencies, etc. We'll keep things simple in this guide, but the foundations will give you a solid starting point to building such a complete system.
 
-Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/catalog.ex` file and our product schema in the directory of the same name. Note the difference between `lib/hello` and `lib/hello_web`. We have a `Catalog` module to serve as the public API for product catalog functionality, as well as an `Catalog.Product` struct, which is an Ecto schema for casting and validating product data. Phoenix also provided web and context tests for us, it also included test helpers for creating entities via the `Hello.Catalog` context, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
+Phoenix generated the web files as expected in `lib/hello_web/`. We can also see our context files were generated inside a `lib/hello/catalog.ex` file and our product schema in the directory of the same name. Note the difference between `lib/hello` and `lib/hello_web`. We have a `Catalog` module to serve as the public API for product catalog functionality, as well as a `Catalog.Product` struct, which is an Ecto schema for casting and validating product data. Phoenix also provided web and context tests for us, it also included test helpers for creating entities via the `Hello.Catalog` context, which we'll look at later. For now, let's follow the instructions and add the route according to the console instructions, in `lib/hello_web/router.ex`:
 
 ```diff
   scope "/", HelloWeb do
@@ -105,13 +105,13 @@ $ mix ecto.migrate
 
 Before we jump into the generated code, let's start the server with `mix phx.server` and visit [http://localhost:4000/products](http://localhost:4000/products). Let's follow the "New Product" link and click the "Save" button without providing any input. We should be greeted with the following output:
 
-```
+```text
 Oops, something went wrong! Please check the errors below.
 ```
 
 When we submit the form, we can see all the validation errors inline with the inputs. Nice! Out of the box, the context generator included the schema fields in our form template and we can see our default validations for required inputs are in effect. Let's enter some example product data and resubmit the form:
 
-```
+```text
 Product created successfully.
 
 Title: Metaprogramming Elixir
@@ -312,7 +312,7 @@ We modified our `show` action to pipe our fetched product into `Catalog.inc_page
 
 We can also see our atomic update in action in the ecto debug logs:
 
-```
+```text
 [debug] QUERY OK source="products" db=0.5ms idle=834.5ms
 UPDATE "products" AS p0 SET "views" = p0."views" + $1 WHERE (p0."id" = $2) RETURNING p0."views" [1, 1]
 ```
@@ -327,7 +327,7 @@ Our basic catalog features are nice, but let's take it up a notch by categorizin
 
 For now, categories will contain only textual information. Our first order of business is to decide where categories live in the application. We have our `Catalog` context, which manages the exhibition of our products. Product categorization is a natural fit here. Phoenix is also smart enough to generate code inside an existing context, which makes adding new resources to a context a breeze. Run the following command at your project root:
 
-> Sometimes it may be tricky to determine if two resources belong to the same context or not. In those cases, prefer distinct contexts per resource and refactor later if necessary. Otherwise you can easily end-up with large contexts of loosely related entities. Also keep in mind that the fact two resources are related does not necessarily mean they belong to the same context, otherwise you would quickly end-up with one large context, as the majority of resources in an application are connected to each other. To sum it up: if you are unsure, you should prefer separate modules (contexts).
+> Sometimes it may be tricky to determine if two resources belong to the same context or not. In those cases, prefer distinct contexts per resource and refactor later if necessary. Otherwise you can easily end up with large contexts of loosely related entities. Also keep in mind that the fact two resources are related does not necessarily mean they belong to the same context, otherwise you would quickly end up with one large context, as the majority of resources in an application are connected to each other. To sum it up: if you are unsure, you should prefer separate modules (contexts).
 
 ```console
 $ mix phx.gen.context Catalog Category categories \
@@ -427,7 +427,6 @@ INSERT INTO "categories" ("title","inserted_at","updated_at") VALUES ($1,$2,$3) 
 
 Perfect. Before we integrate categories in the web layer, we need to let our context know how to associate products and categories. First, open up `lib/hello/catalog/product.ex` and add the following association:
 
-
 ```diff
 + alias Hello.Catalog.Category
 
@@ -444,10 +443,9 @@ Perfect. Before we integrate categories in the web layer, we need to let our con
 
 ```
 
-We used `Ecto.Schema`'s `many_to_many` macro to let Ecto know how to associate our product to multiple categories thru the `"product_categories"` join table. We also used the `on_replace: :delete` option to declare that any existing join records should be deleted when we are changing our categories.
+We used `Ecto.Schema`'s `many_to_many` macro to let Ecto know how to associate our product to multiple categories through the `"product_categories"` join table. We also used the `on_replace: :delete` option to declare that any existing join records should be deleted when we are changing our categories.
 
 With our schema associations set up, we can implement the selection of categories in our product form. To do so, we need to translate the user input of catalog IDs from the front-end to our many-to-many association. Fortunately Ecto makes this a breeze now that our schema is set up. Open up your catalog context and make the following changes:
-
 
 ```diff
 + alias Hello.Catalog.Category
@@ -543,7 +541,7 @@ We added a `category_select` above our save button. Now let's try it out. Next, 
 
 Now if we start the server with `mix phx.server` and visit [http://localhost:4000/products/new](http://localhost:4000/products/new), we'll see the new category multiple select input. Enter some valid product details, select a category or two, and click save.
 
-```
+```text
 Title: Elixir Flashcards
 Description: Flash card set for the Elixir programming language
 Price: 5.000000
@@ -559,7 +557,7 @@ It's not much to look at yet, but it works! We added relationships within our co
 
 Now that we have the beginnings of our product catalog features, let's begin to work on the other main features of our application – carting products from the catalog. In order to properly track products that have been added to a user's cart, we'll need a new place to persist this information, along with point-in-time product information like the price at time of carting. This is necessary so we can detect product price changes in the future. We know what we need to build, but now we need to decide where the cart functionality lives in our application.
 
-If we take a step back and think about the isolation of our application, the exhibition of products in our catalog distinctly differs from the responsibilities of managing a user's cart. A product catalog shouldn't care about the rules of a our shopping cart system, and vice-versa. There's a clear need here for a separate context to handle the new cart responsibilities. Let's call it `ShoppingCart`.
+If we take a step back and think about the isolation of our application, the exhibition of products in our catalog distinctly differs from the responsibilities of managing a user's cart. A product catalog shouldn't care about the rules of our shopping cart system, and vice-versa. There's a clear need here for a separate context to handle the new cart responsibilities. Let's call it `ShoppingCart`.
 
 Let's create a `ShoppingCart` context to handle basic cart duties. Before we write code, let's imagine we have the following feature requirements:
 
@@ -882,7 +880,7 @@ The `link` function component from `Phoenix.LiveView.Helpers` accepts a `:method
 
 Let's try it out. Start your server with `mix phx.server` and visit a product page. If we try clicking the add to cart link, we'll be greeted by an error page with the following logs in the console:
 
-```
+```text
 [info] POST /cart_items
 [debug] Processing with HelloWeb.CartItemController.create/2
   Parameters: %{"_method" => "post", "product_id" => "1", ...}
@@ -987,7 +985,7 @@ Now that we can calculate price totals, let's try it out! Visit [`http://localho
 
 Our cart page is almost complete, but submitting the form will yield yet another error.
 
-```
+```text
 Request: POST /cart
 ** (exit) an exception was raised:
     ** (UndefinedFunctionError) function HelloWeb.CartController.update/2 is undefined or private
@@ -1196,7 +1194,6 @@ $ mix ecto.migrate
 ```
 
 Before we render information about our orders, we need to ensure our order data is fully populated and can be looked up by a current user. Open up your orders context in `lib/hello/orders.ex` and replace your `get_order!/1` function by a new `get_order!/2` definition:
-
 
 ```elixir
   def get_order!(user_uuid, id) do

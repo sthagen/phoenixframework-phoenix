@@ -68,7 +68,6 @@ You can learn more about applications in [Elixir's official docs for Application
 
 The `lib/hello/mailer.ex` file holds the `Hello.Mailer` module, which defines the main interface to deliver e-mails:
 
-
 ```elixir
 defmodule Hello.Mailer do
   use Swoosh.Mailer, otp_app: :hello
@@ -98,7 +97,6 @@ lib/hello_web
 ├── templates
 │   ├── layout
 │   │   ├── app.html.heex
-│   │   ├── live.html.heex
 │   │   └── root.html.heex
 │   └── page
 │       └── index.html.heex

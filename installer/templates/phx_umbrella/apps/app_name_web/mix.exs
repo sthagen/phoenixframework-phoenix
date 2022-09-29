@@ -9,7 +9,7 @@ defmodule <%= @web_namespace %>.MixProject do
       config_path: "../../config/config.exs",
       deps_path: "../../deps",
       lockfile: "../../mix.lock",
-      elixir: "~> 1.12",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
@@ -40,10 +40,11 @@ defmodule <%= @web_namespace %>.MixProject do
       {:phoenix_ecto, "~> 4.4"},<% end %><%= if @html do %>
       {:phoenix_html, "~> 3.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      # TODO bump to 0.18 on release
-      {:phoenix_live_view, github: "phoenixframework/phoenix_live_view", override: true},
-      {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.6"},<% end %><%= if @assets do %>
+      {:phoenix_live_view, "~> 0.18"},
+      {:heroicons, "~> 0.5"},
+      {:floki, ">= 0.30.0", only: :test},
+      {:tailwind, "~> 0.1.8", runtime: Mix.env() == :dev},<% end %><%= if @dashboard do %>
+      {:phoenix_live_dashboard, "~> 0.7"},<% end %><%= if @assets do %>
       {:esbuild, "~> 0.5", runtime: Mix.env() == :dev},<% end %>
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},<%= if @gettext do %>
@@ -61,7 +62,7 @@ defmodule <%= @web_namespace %>.MixProject do
     [
       setup: ["deps.get"]<%= if @ecto do %>,
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"]<% end %><%= if @assets do %>,
-      "assets.deploy": ["esbuild default --minify", "phx.digest"]<% end %>
+      "assets.deploy": ["tailwind default --minify", "esbuild default --minify", "phx.digest"]<% end %>
     ]
   end
 end
