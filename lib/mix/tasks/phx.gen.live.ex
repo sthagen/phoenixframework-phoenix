@@ -147,7 +147,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
       {:eex, "index.html.heex", Path.join(web_live, "index.html.heex")},
       {:eex, "show.html.heex", Path.join(web_live, "show.html.heex")},
       {:eex, "live_test.exs", Path.join(test_live, "#{schema.singular}_live_test.exs")},
-      {:new_eex, "core_components.ex", Path.join([web_prefix, "core_components.ex"])}
+      {:new_eex, "core_components.ex", Path.join([web_prefix, "components", "core_components.ex"])}
     ]
   end
 
@@ -173,7 +173,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     [lib_prefix, web_dir] = Path.split(web_prefix)
     file_path = Path.join(lib_prefix, "#{web_dir}.ex")
     file = File.read!(file_path)
-    inject = "import #{inspect(context.web_module)}.Components"
+    inject = "import #{inspect(context.web_module)}.CoreComponents"
 
     if String.contains?(file, inject) do
       :ok
@@ -190,8 +190,8 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     new_file =
       String.replace(
         file,
-        "import Phoenix.LiveView.Helpers",
-        "import Phoenix.LiveView.Helpers\n      #{inject}"
+        "use Phoenix.Component",
+        "use Phoenix.Component\n      #{inject}"
       )
 
     if file != new_file do
@@ -199,7 +199,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
     else
       Mix.shell().info("""
 
-      Could not find Phoenix.LiveView.Helpers imported in #{file_path}.
+      Could not find use Phoenix.Component in #{file_path}.
 
       This typically happens because your application was not generated
       with the --live flag:
@@ -208,7 +208,7 @@ defmodule Mix.Tasks.Phx.Gen.Live do
 
       Please make sure LiveView is installed and that #{inspect(context.web_module)}
       defines both `live_view/0` and `live_component/0` functions,
-      and that both functions import #{inspect(context.web_module)}.Components.
+      and that both functions import #{inspect(context.web_module)}.CoreComponents.
       """)
     end
   end
