@@ -60,7 +60,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/config/prod.exs", fn file ->
-        assert file =~ "port: 443"
+        assert file =~ "config :logger, level: :info"
       end)
 
       assert_file("phx_blog/config/runtime.exs", ~r/ip: {0, 0, 0, 0, 0, 0, 0, 0}/)
@@ -154,10 +154,9 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/assets/css/app.css")
-      assert_file("phx_blog/assets/css/phoenix.css")
+
 
       refute File.exists?("phx_blog/priv/static/assets/app.css")
-      refute File.exists?("phx_blog/priv/static/assets/phoenix.css")
       refute File.exists?("phx_blog/priv/static/assets/app.js")
       assert File.exists?("phx_blog/assets/vendor")
 
@@ -313,7 +312,6 @@ defmodule Mix.Tasks.Phx.NewTest do
 
       # No assets & No HTML
       refute_file("phx_blog/priv/static/assets/app.css")
-      refute_file("phx_blog/priv/static/assets/phoenix.css")
       refute_file("phx_blog/priv/static/favicon.ico")
       refute_file("phx_blog/priv/static/images/phoenix.png")
       refute_file("phx_blog/priv/static/assets/app.js")
@@ -499,7 +497,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("phx_blog/.gitignore")
       assert_file("phx_blog/.gitignore", ~r/\n$/)
       assert_file("phx_blog/priv/static/assets/app.css")
-      assert_file("phx_blog/priv/static/assets/phoenix.css")
       assert_file("phx_blog/priv/static/assets/app.js")
       assert_file("phx_blog/priv/static/favicon.ico")
       assert_file("phx_blog/priv/static/images/phoenix.png")

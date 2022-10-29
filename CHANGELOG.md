@@ -25,9 +25,9 @@ Unmatched routes will issue compiler warnings:
     warning: no route path for AppWeb.Router matches "/postz/#{post}"
       lib/app_web/controllers/post_controller.ex:100: AppWeb.PostController.show/2
 
-*Note: Elixir >= 1.14.0 is required for comprehensive warnings. Older versions
+*Note: Elixir v1.14+ is required for comprehensive warnings. Older versions
 will work properly and warn on new compilations, but changes to the router file
-will not issue new warnings.
+will not issue new warnings.*
 
 This feature replaces the `Helpers` module generated in your Phoenix router, but helpers
 will continue to work and be generated. You can disable router helpers by passing the
@@ -51,6 +51,16 @@ will continue to work and be generated. You can disable router helpers by passin
 See the [upgrade guide](https://gist.github.com/chrismccord/2ab350f154235ad4a4d0f4de6decba7b) to upgrade from Phoenix 1.5.x.
 
 Phoenix v1.6 requires Elixir v1.9+.
+
+## 1.6.13 (2022-09-29)
+
+### Enhancements
+  * [phx.gen.release] Fetch compatible docker image from API when passing `--docker` flag
+
+## 1.6.12 (2022-09-06)
+
+### Bug Fixes
+  * Fix `phx.gen.release` Dockerfile pointing to expired image
 
 ## 1.6.11 (2022-07-11)
 
