@@ -14,9 +14,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-submit="update_email"
       phx-change="validate_email"
     >
-      <.error :if={@email_changeset.action == :insert} message="Oops, something went wrong! Please check the errors below." />
+      <.error :if={@email_changeset.action == :insert}>
+        Oops, something went wrong! Please check the errors below.
+      </.error>
 
-      <.input field={{f, :email}} type="email" label="Email" required value={input_value(f, :email)} />
+      <.input field={{f, :email}} type="email" label="Email" required />
 
       <.input
         field={{f, :current_password}}
@@ -44,23 +46,14 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-submit="update_password"
       phx-trigger-action={@trigger_submit}
     >
-      <.error :if={@password_changeset.action == :insert} message="Oops, something went wrong! Please check the errors below." />
+      <.error :if={@password_changeset.action == :insert}>
+        Oops, something went wrong! Please check the errors below.
+      </.error>
 
       <.input field={{f, :email}} type="hidden" value={@current_email} />
 
-      <.input
-        field={{f, :password}}
-        type="password"
-        label="New password"
-        value={input_value(f, :password)}
-        required
-      />
-      <.input
-        field={{f, :password_confirmation}}
-        type="password"
-        label="Confirm new password"
-        value={input_value(f, :password_confirmation)}
-      />
+      <.input field={{f, :password}} type="password" label="New password" required />
+      <.input field={{f, :password_confirmation}} type="password" label="Confirm new password" />
       <.input
         field={{f, :current_password}}
         name="current_password"

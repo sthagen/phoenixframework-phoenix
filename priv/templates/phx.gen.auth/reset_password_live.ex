@@ -14,20 +14,15 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       phx-submit="reset_password"
       phx-change="validate"
     >
-      <.error :if={@changeset.action == :insert} message="Oops, something went wrong! Please check the errors below." />
+      <.error :if={@changeset.action == :insert}>
+        Oops, something went wrong! Please check the errors below.
+      </.error>
 
-      <.input
-        field={{f, :password}}
-        type="password"
-        label="New password"
-        value={input_value(f, :password)}
-        required
-      />
+      <.input field={{f, :password}} type="password" label="New password" required />
       <.input
         field={{f, :password_confirmation}}
         type="password"
         label="Confirm new password"
-        value={input_value(f, :password_confirmation)}
         required
       />
       <:actions>

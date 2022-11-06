@@ -131,7 +131,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(web_path(@app, "lib/#{@app}_web.ex"), fn file ->
         assert file =~ "defmodule PhxUmbWeb do"
-        assert file =~ ~r/use Phoenix.View,\s+root: "lib\/phx_umb_web\/templates"/
         assert file =~ "import Phoenix.HTML"
         assert file =~ "Phoenix.LiveView"
       end)
@@ -273,6 +272,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # Mailer
       assert_file(app_path(@app, "mix.exs"), fn file ->
         assert file =~ "{:swoosh, \"~> 1.3\"}"
+        assert file =~ "{:finch, \"~> 0.13\"}"
+      end)
+
+      assert_file(app_path(@app, "lib/#{@app}/application.ex"), fn file ->
+        assert file =~ "{Finch, name: PhxUmb.Finch}"
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/mailer.ex"), fn file ->
@@ -291,6 +295,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(root_path(@app, "config/dev.exs"), fn file ->
         assert file =~ "config :swoosh"
+      end)
+
+      assert_file(root_path(@app, "config/prod.exs"), fn file ->
+        assert file =~ "config :swoosh, :api_client, #{@app}.Finch"
       end)
 
       # Install dependencies?
@@ -381,7 +389,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, "mix.exs"), &refute(&1 =~ ~r":phoenix_live_reload"))
 
       assert_file(web_path(@app, "lib/#{@app}_web.ex"), fn file ->
-        assert file =~ "defp html_helpers do"
+        refute file =~ "defp html_helpers do"
         refute file =~ "Phoenix.HTML"
         refute file =~ "Phoenix.LiveView"
       end)
@@ -401,6 +409,11 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       # Without mailer
       assert_file(web_path(@app, "mix.exs"), fn file ->
         refute file =~ "{:swoosh, \"~> 1.3\"}"
+        refute file =~ "{:finch, \"~> 0.13\"}"
+      end)
+
+      assert_file(app_path(@app, "lib/#{@app}/application.ex"), fn file ->
+        refute file =~ "{Finch, name: #{@app}.Finch}"
       end)
 
       refute File.exists?(app_path(@app, "lib/#{@app}/mailer.ex"))
@@ -412,6 +425,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
 
       assert_file(root_path(@app, "config/test.exs"), fn file ->
         refute file =~ "config :phx_umb, PhxUmb.Mailer, adapter: Swoosh.Adapters.Test"
+      end)
+
+      assert_file(root_path(@app, "config/prod.exs"), fn file ->
+        refute file =~ "config :swoosh"
       end)
     end)
   end

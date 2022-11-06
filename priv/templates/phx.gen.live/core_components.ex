@@ -72,7 +72,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
                   phx-click={hide_modal(@on_cancel, @id)}
                   type="button"
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label={gettext("close")}
+                  aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
                 >
                   <Heroicons.x_mark solid class="h-5 w-5 stroke-current" />
                 </button>
@@ -153,7 +153,12 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <%%= @title %>
       </p>
       <p class="mt-2 text-[0.8125rem] leading-5"><%%= msg %></p>
-      <button :if={@close} type="button" class="group absolute top-2 right-1 p-2" aria-label={gettext("close")}>
+      <button
+        :if={@close}
+        type="button"
+        class="group absolute top-2 right-1 p-2"
+        aria-label=<%= if @gettext do %>{gettext("close")}<% else %>"close"<% end %>
+      >
         <Heroicons.x_mark solid class="h-5 w-5 stroke-current opacity-40 group-hover:opacity-70" />
       </button>
     </div>
@@ -253,14 +258,18 @@ defmodule <%= @web_namespace %>.CoreComponents do
   attr :checked, :boolean, doc: "the checked flag for checkbox inputs"
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
+  attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
   attr :rest, :global, include: ~w(autocomplete disabled form max maxlength min minlength
-                                   multiple pattern placeholder readonly required size step)
+                                   pattern placeholder readonly required size step)
   slot :inner_block
 
   def input(%{field: {f, field}} = assigns) do
     assigns
     |> assign(field: nil)
-    |> assign_new(:name, fn -> Phoenix.HTML.Form.input_name(f, field) end)
+    |> assign_new(:name, fn ->
+      name = Phoenix.HTML.Form.input_name(f, field)
+      if assigns.multiple, do: name <> "[]", else: name
+    end)
     |> assign_new(:id, fn -> Phoenix.HTML.Form.input_id(f, field) end)
     |> assign_new(:value, fn -> Phoenix.HTML.Form.input_value(f, field) end)
     |> assign_new(:errors, fn -> translate_errors(f.errors || [], field) end)
@@ -295,12 +304,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
         id={@id}
         name={@name}
         class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-zinc-500 focus:border-zinc-500 sm:text-sm"
+        multiple={@multiple}
         {@rest}
       >
         <option :if={@prompt}><%%= @prompt %></option>
         <%%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
       </select>
-      <.error :for={msg <- @errors} message={msg} />
+      <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
     """
   end
@@ -320,9 +330,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
         ]}
         {@rest}
       >
-    <%!-- Force textarea newline. Do not delete or indent --%>
+
     <%%= @value %></textarea>
-      <.error :for={msg <- @errors} message={msg} />
+      <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
     """
   end
@@ -344,7 +354,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         ]}
         {@rest}
       />
-      <.error :for={msg <- @errors} message={msg} />
+      <.error :for={msg <- @errors}><%%= msg %></.error>
     </div>
     """
   end
@@ -372,13 +382,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
   @doc """
   Generates a generic error message.
   """
-  attr :message, :string, required: true
+  slot :inner_block, required: true
 
   def error(assigns) do
     ~H"""
     <p class="phx-no-feedback:hidden mt-3 flex gap-3 text-sm leading-6 text-rose-600">
       <Heroicons.exclamation_circle mini class="mt-0.5 h-5 w-5 flex-none fill-rose-500" />
-      <%%= @message %>
+      <%%= render_slot(@inner_block) %>
     </p>
     """
   end
@@ -413,13 +423,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   ## Examples
 
-      <.table rows={@users}>
+      <.table id="users" rows={@users}>
         <:col :let={user} label="id"><%%= user.id %></:col>
         <:col :let={user} label="username"><%%= user.username %></:col>
       </.table>
   """
   attr :id, :string, required: true
-  attr :row_click, JS, default: nil
+  attr :row_click, :any, default: nil
   attr :rows, :list, required: true
 
   slot :col, required: true do
@@ -435,30 +445,32 @@ defmodule <%= @web_namespace %>.CoreComponents do
         <thead class="text-left text-[0.8125rem] leading-6 text-zinc-500">
           <tr>
             <th :for={col <- @col} class="p-0 pb-4 pr-6 font-normal"><%%= col[:label] %></th>
-            <th class="relative p-0 pb-4"><span class="sr-only"><%%= gettext("Actions") %></span></th>
+            <th class="relative p-0 pb-4"><span class="sr-only"><%= if @gettext do %><%%= gettext("Actions") %><% else %>Actions<% end %></span></th>
           </tr>
         </thead>
         <tbody class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700">
           <tr
             :for={row <- @rows}
             id={"#{@id}-#{Phoenix.Param.to_param(row)}"}
-            class="group hover:bg-zinc-50"
+            class="relative group hover:bg-zinc-50"
           >
             <td
               :for={{col, i} <- Enum.with_index(@col)}
               phx-click={@row_click && @row_click.(row)}
-              class={["relative p-0", @row_click && "hover:cursor-pointer"]}
+              class={["p-0", @row_click && "hover:cursor-pointer"]}
             >
+              <div :if={i == 0}>
+                <span class="absolute h-full w-4 top-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
+                <span class="absolute h-full w-4 top-0 -right-4 group-hover:bg-zinc-50 sm:rounded-r-xl" />
+              </div>
               <div class="block py-4 pr-6">
-                <span class="absolute -inset-y-px right-0 -left-4 group-hover:bg-zinc-50 sm:rounded-l-xl" />
                 <span class={["relative", i == 0 && "font-semibold text-zinc-900"]}>
                   <%%= render_slot(col, row) %>
                 </span>
               </div>
             </td>
-            <td :if={@action != []} class="relative p-0 w-14">
+            <td :if={@action != []} class="p-0 w-14">
               <div class="relative whitespace-nowrap py-4 text-right text-sm font-medium">
-                <span class="absolute -inset-y-px -right-4 left-0 group-hover:bg-zinc-50 sm:rounded-r-xl" />
                 <span
                   :for={action <- @action}
                   class="relative ml-4 font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
@@ -572,7 +584,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
 
   @doc """
   Translates an error message using gettext.
-  """
+  """<%= if @gettext do %>
   def translate_error({msg, opts}) do
     # When using gettext, we typically pass the strings we want
     # to translate as a static argument:
@@ -596,7 +608,21 @@ defmodule <%= @web_namespace %>.CoreComponents do
     else
       Gettext.dgettext(<%= @web_namespace %>.Gettext, "errors", msg, opts)
     end
-  end
+  end<% else %>
+  def translate_error({msg, opts}) do
+    # You can make use of gettext to translate error messages by
+    # uncommenting and adjusting the following code:
+
+    # if count = opts[:count] do
+    #   Gettext.dngettext(<%= @web_namespace %>.Gettext, "errors", msg, msg, count, opts)
+    # else
+    #   Gettext.dgettext(<%= @web_namespace %>.Gettext, "errors", msg, opts)
+    # end
+
+    Enum.reduce(opts, msg, fn {key, value}, acc ->
+      String.replace(acc, "%{#{key}}", fn _ -> to_string(value) end)
+    end)
+  end<% end %>
 
   @doc """
   Translates the errors for a field from a keyword list of errors.

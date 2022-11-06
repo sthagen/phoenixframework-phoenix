@@ -68,19 +68,19 @@ defmodule Phoenix.MixProject do
 
   defp deps do
     [
-      {:plug, "~> 1.10"},
+      {:plug, "~> 1.14"},
       {:plug_crypto, "~> 1.2"},
       {:telemetry, "~> 0.4 or ~> 1.0"},
       {:phoenix_pubsub, "~> 2.1"},
-
       {:phoenix_view, "~> 2.0", optional: true},
       {:phoenix_template, "~> 1.0"},
+      {:websock_adapter, "~> 0.4"},
 
       # TODO drop castore when we require OTP 25+
       {:castore, ">= 0.0.0"},
 
       # Optional deps
-      {:plug_cowboy, "~> 2.2", optional: true},
+      {:plug_cowboy, "~> 2.6", optional: true},
       {:jason, "~> 1.0", optional: true},
 
       # Docs dependencies (some for cross references)
@@ -143,7 +143,7 @@ defmodule Phoenix.MixProject do
       "guides/plug.md",
       "guides/routing.md",
       "guides/controllers.md",
-      "guides/views.md",
+      "guides/components.md",
       "guides/ecto.md",
       "guides/contexts.md",
       "guides/mix_tasks.md",
@@ -191,6 +191,7 @@ defmodule Phoenix.MixProject do
     # Phoenix.Param
     # Phoenix.Presence
     # Phoenix.Router
+    # Phoenix.Socket
     # Phoenix.Token
     # Phoenix.VerifiedRoutes
 
@@ -201,14 +202,14 @@ defmodule Phoenix.MixProject do
       ],
       "Adapters and Plugs": [
         Phoenix.CodeReloader,
-        Phoenix.Endpoint.Cowboy2Adapter
+        Phoenix.Endpoint.Cowboy2Adapter,
+        Phoenix.Endpoint.SyncCodeReloadPlug
       ],
       Digester: [
         Phoenix.Digester.Compressor,
         Phoenix.Digester.Gzip
       ],
-      "Socket and Transport": [
-        Phoenix.Socket,
+      "Socket": [
         Phoenix.Socket.Broadcast,
         Phoenix.Socket.Message,
         Phoenix.Socket.Reply,
