@@ -73,6 +73,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         assert file =~ ~r[esbuild: {Esbuild]
         assert file =~ "lib/#{@app}_web/(live|views)/.*(ex)"
         assert file =~ "lib/#{@app}_web/templates/.*(eex)"
+        assert file =~ "config :#{@app}_web, dev_routes: true"
       end)
 
       assert_file(root_path(@app, "config/prod.exs"), fn file ->
@@ -156,7 +157,10 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
         ~r/defmodule PhxUmbWeb.PageHTML/
       )
 
-      assert_file(web_path(@app, "lib/#{@app}_web/router.ex"), "defmodule PhxUmbWeb.Router")
+      assert_file(web_path(@app, "lib/#{@app}_web/router.ex"), fn file ->
+        assert file =~ "defmodule PhxUmbWeb.Router"
+        assert file =~ "Application.compile_env(:#{@app}_web, :dev_routes)"
+      end)
 
       assert_file(
         web_path(@app, "lib/#{@app}_web/components/core_components.ex"),
@@ -179,7 +183,6 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       assert_file(web_path(@app, ".gitignore"), "#{@app}_web-*.tar")
       assert_file(web_path(@app, ".gitignore"), ~r/\n$/)
       assert_file(web_path(@app, "assets/css/app.css"))
-
 
       assert_file(web_path(@app, "priv/static/favicon.ico"))
       assert_file(web_path(@app, "priv/static/images/phoenix.png"))
@@ -298,7 +301,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end)
 
       assert_file(root_path(@app, "config/prod.exs"), fn file ->
-        assert file =~ "config :swoosh, :api_client, #{@app}.Finch"
+        assert file =~ "config :swoosh, :api_client, PhxUmb.Finch"
       end)
 
       # Install dependencies?
@@ -413,7 +416,7 @@ defmodule Mix.Tasks.Phx.New.UmbrellaTest do
       end)
 
       assert_file(app_path(@app, "lib/#{@app}/application.ex"), fn file ->
-        refute file =~ "{Finch, name: #{@app}.Finch}"
+        refute file =~ "{Finch, name: PhxUmb.Finch}"
       end)
 
       refute File.exists?(app_path(@app, "lib/#{@app}/mailer.ex"))

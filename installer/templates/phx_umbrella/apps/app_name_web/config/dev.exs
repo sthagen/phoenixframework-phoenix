@@ -46,7 +46,9 @@ config :<%= @web_app_name %>, <%= @endpoint_module %>,
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",<%= if @gettext do %>
       ~r"priv/gettext/.*(po)$",<% end %>
-      ~r"lib/<%= @web_app_name %>/(live|views)/.*(ex)$",
-      ~r"lib/<%= @web_app_name %>/templates/.*(eex)$"
+      ~r"lib/<%= @web_app_name %>/(controllers|live|components)/.*(ex|heex)$"
     ]
   ]<% end %>
+
+# Enable dev routes for dashboard and mailbox
+config :<%= @web_app_name %>, dev_routes: true
