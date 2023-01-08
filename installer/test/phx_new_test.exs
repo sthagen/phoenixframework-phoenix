@@ -276,7 +276,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/config/prod.exs", fn file ->
-        assert file =~ "config :swoosh, :api_client, PhxBlog.Finch"
+        assert file =~ "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
       end)
 
       # Install dependencies?
@@ -576,11 +576,6 @@ defmodule Mix.Tasks.Phx.NewTest do
       assert_file("custom_path/mix.exs", ~r/app: :phx_blog/)
       assert_file("custom_path/lib/phx_blog_web/endpoint.ex", ~r/app: :phx_blog/)
       assert_file("custom_path/config/config.exs", ~r/namespace: PhoteuxBlog/)
-
-      assert_file(
-        "custom_path/lib/phx_blog_web.ex",
-        ~r/use Phoenix.Controller,\n.*namespace: PhoteuxBlogWeb/
-      )
     end)
   end
 
