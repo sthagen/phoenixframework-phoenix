@@ -8,6 +8,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <.header>Change Email</.header>
 
     <.simple_form
+      for={@email_form}
       id="email_form"
       phx-submit="update_email"
       phx-change="validate_email"
@@ -30,6 +31,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     <.header>Change Password</.header>
 
     <.simple_form
+      for={@password_form}
       id="password_form"
       action={~p"<%= schema.route_prefix %>/log_in?_action=password_updated"}
       method="post"
@@ -39,7 +41,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
     >
       <.input field={@password_form[:email]} type="hidden" value={@current_email} />
       <.input field={@password_form[:password]} type="password" label="New password" required />
-      <.input field={@password_form[:password_confirmation]} type="password" label="Confirm new password" />
+      <.input
+        field={@password_form[:password_confirmation]}
+        type="password"
+        label="Confirm new password"
+      />
       <.input
         field={@password_form[:current_password]}
         name="current_password"
@@ -88,6 +94,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def handle_event("validate_email", params, socket) do
     %{"current_password" => password, "<%= schema.singular %>" => <%= schema.singular %>_params} = params
+
     email_form =
       socket.assigns.current_<%= schema.singular %>
       |> <%= inspect context.alias %>.change_<%= schema.singular %>_email(<%= schema.singular %>_params)
@@ -119,6 +126,7 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
 
   def handle_event("validate_password", params, socket) do
     %{"current_password" => password, "<%= schema.singular %>" => <%= schema.singular %>_params} = params
+
     password_form =
       socket.assigns.current_<%= schema.singular %>
       |> <%= inspect context.alias %>.change_<%= schema.singular %>_password(<%= schema.singular %>_params)
