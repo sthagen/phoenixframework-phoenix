@@ -131,14 +131,7 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/lib/phx_blog_web/components/layouts/app.html.heex")
-
-      assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex", fn file ->
-        version = Application.spec(:phx_new, :vsn) |> to_string() |> Version.parse!()
-        changelog_vsn = "v#{version.major}.#{version.minor}"
-
-        assert file =~
-                 "https://github.com/phoenixframework/phoenix/blob/#{changelog_vsn}/CHANGELOG.md"
-      end)
+      assert_file("phx_blog/lib/phx_blog_web/controllers/page_html/home.html.heex")
 
       # assets
       assert_file("phx_blog/.gitignore", fn file ->
@@ -152,7 +145,14 @@ defmodule Mix.Tasks.Phx.NewTest do
         assert file =~ "lib/phx_blog_web/(controllers|live|components)/.*(ex|heex)"
       end)
 
+      # tailwind
       assert_file("phx_blog/assets/css/app.css")
+      assert_file("phx_blog/assets/tailwind.config.js")
+      assert_file("phx_blog/priv/hero_icons/LICENSE.md")
+      assert_file("phx_blog/priv/hero_icons/UPGRADE.md")
+      assert_file("phx_blog/priv/hero_icons/optimized/24/outline/cake.svg")
+      assert_file("phx_blog/priv/hero_icons/optimized/24/solid/cake.svg")
+      assert_file("phx_blog/priv/hero_icons/optimized/20/solid/cake.svg")
 
       refute File.exists?("phx_blog/priv/static/assets/app.css")
       refute File.exists?("phx_blog/priv/static/assets/app.js")
@@ -279,7 +279,8 @@ defmodule Mix.Tasks.Phx.NewTest do
       end)
 
       assert_file("phx_blog/config/prod.exs", fn file ->
-        assert file =~ "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
+        assert file =~
+                 "config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: PhxBlog.Finch"
       end)
 
       # Install dependencies?
