@@ -346,7 +346,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         class={[
           "mt-2 block w-full rounded-lg text-zinc-900 focus:ring-0 sm:text-sm sm:leading-6",
           "phx-no-feedback:border-zinc-300 phx-no-feedback:focus:border-zinc-400",
-          "border-zinc-300 focus:border-zinc-400",
+          @errors == [] && "border-zinc-300 focus:border-zinc-400",
           @errors != [] && "border-rose-400 focus:border-rose-400"
         ]}
         {@rest}
@@ -537,9 +537,9 @@ defmodule <%= @web_namespace %>.CoreComponents do
   end
 
   @doc """
-  Renders a [Hero Icon](https://heroicons.com).
+  Renders a [Heroicon](https://heroicons.com).
 
-  Hero icons come in three styles – outline, solid, and mini.
+  Heroicons come in three styles – outline, solid, and mini.
   By default, the outline style is used, but solid an mini may
   be applied by using the `-solid` and `-mini` suffix.
 

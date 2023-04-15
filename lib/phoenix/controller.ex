@@ -506,7 +506,7 @@ defmodule Phoenix.Controller do
     end
   end
 
-  @invalid_local_url_chars ["\\"]
+  @invalid_local_url_chars ["\\", "/%", "/\t"]
   defp validate_local_url("//" <> _ = to), do: raise_invalid_url(to)
 
   defp validate_local_url("/" <> _ = to) do
@@ -755,7 +755,7 @@ defmodule Phoenix.Controller do
 
   Raises `Plug.Conn.AlreadySentError` if `conn` is already sent.
   """
-  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}]) ::
+  @spec put_root_layout(Plug.Conn.t(), [{format :: atom, layout}] | false) ::
           Plug.Conn.t()
   def put_root_layout(%Plug.Conn{state: state} = conn, layout) do
     if state in @unsent do
