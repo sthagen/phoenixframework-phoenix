@@ -1,8 +1,4 @@
-import Config
-
-# For production, don't forget to configure the url host
-# to something meaningful, Phoenix uses this information
-# when generating URLs.<%= if @javascript or @css do %>
+import Config<%= if @javascript or @css do %>
 
 # Note we also include the path to a cache manifest
 # containing the digested version of static files. This
