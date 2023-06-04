@@ -8,7 +8,7 @@ defmodule Phoenix.MixProject do
     end
   end
 
-  @version "1.7.2"
+  @version "1.7.3"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to make the installer
@@ -89,7 +89,7 @@ defmodule Phoenix.MixProject do
       # Docs dependencies (some for cross references)
       {:ex_doc, "~> 0.24", only: :docs},
       {:ecto, "~> 3.0", only: :docs},
-      {:ecto_sql, "~> 3.6", only: :docs},
+      {:ecto_sql, "~> 3.10", only: :docs},
       {:gettext, "~> 0.20", only: :docs},
       {:telemetry_poller, "~> 1.0", only: :docs},
       {:telemetry_metrics, "~> 0.6", only: :docs},
@@ -167,7 +167,9 @@ defmodule Phoenix.MixProject do
       "guides/deployment/fly.md",
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
+      "guides/howto/file_uploads.md",
       "guides/howto/using_ssl.md",
+      "guides/howto/writing_a_channels_client.md",
       "CHANGELOG.md"
     ]
   end
