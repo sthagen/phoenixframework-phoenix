@@ -35,6 +35,8 @@ There are a number of places to connect with community members at all experience
 ## Screencasts/Courses
 
   * [Phoenix LiveView Free Course (by The Pragmatic Studio - 2023)](https://pragmaticstudio.com/courses/phoenix-liveview)
+  
+  * [Free Crash Course: Phoenix LiveView (by Productive Programmer - 2023)](https://www.productiveprogrammer.com/learn-phoenix-liveview-free)
 
   * [Groxio LiveView: Self Study Program (by Bruce Tate - 2020)](https://grox.io/language/liveview/course)
 
@@ -51,3 +53,5 @@ There are a number of places to connect with community members at all experience
   * [LearnPhoenix.tv: Learn how to Build Fast, Dependable Web Apps with Phoenix (2017)](https://www.learnphoenix.tv/)
 
   * [LearnPhoenix.io: Build Scalable, Real-Time Apps with Phoenix, React, and React Native (2016)](https://www.learnphoenix.io/)
+
+  * [Phoenix on Rails: Elixir and Phoenix for Ruby on Rails developers (by George Arrowsmith - 2023)](https://phoenixonrails.com)
