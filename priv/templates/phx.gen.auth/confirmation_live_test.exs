@@ -54,9 +54,11 @@ defmodule <%= inspect context.web_module %>.<%= inspect Module.concat(schema.web
       assert Phoenix.Flash.get(conn.assigns.flash, :error) =~
                "<%= inspect schema.alias %> confirmation link is invalid or it has expired"
 
+      conn = build_conn()
+
       # when logged in
       {:ok, lv, _html} =
-        build_conn()
+        conn
         |> log_in_<%= schema.singular %>(<%= schema.singular %>)
         |> live(~p"<%= schema.route_prefix %>/confirm/#{token}")
 
