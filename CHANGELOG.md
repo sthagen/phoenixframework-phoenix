@@ -48,12 +48,29 @@ future styling).
 
 ## 1.7.8
 
-### Bug Fixes
-  * Fix `mix phx.gen.release --docker` failing with `:http_util` error on Elixir v1.15
+### Bug fixes
+  * [Phoenix.ChannelTest] Stringify lists when pushing data
+  * [Phoenix.Controller] Fix filename when sending downloads with non-ascii names
+  * [Phoenix.CodeReloader] Remove duplicate warnings on recent Elixir versions
+  * [Phoenix.CodeReloader] Do not crash code reloader if file information is missing from diagnostic
+  * [Phoenix.Logger] Do not crash when status is atom
+  * [phx.gen.release] Fix `mix phx.gen.release --docker` failing with `:http_util` error on Elixir v1.15
+  * [phx.gen.*] Skip map inputs in generated forms as there is no trivial matching input
+  * [phx.new] Fix tailwind/esbuild config and paths in umbrella projects
+  * [phx.new] Do not render `th` for actions if actions are empty
 
-## Enhancements
+### Enhancements
+  * [Phoenix] Allow latest `plug_crypto`
+  * [Phoenix.Endpoint] Support dynamic socket drainer configuration
+  * [Phoenix.Logger] Change socket serializer/version logs to warning
   * [Phoenix.VerifiedRoutes] Add support for static resources with fragments in `~p`
-  * [phx.new] Add `--adapter` flag for generating application with webservers like bandit
+  * [phx.gen.schema] Support `--repo` and `--migration-dir` flags
+  * [phx.new] Allow `<.input type="checkbox">` without `value` attr in core components
+  * [phx.new] Allow UTC datetimes in the generators
+  * [phx.new] Automatically migrate when release starts when using sqlite 3
+  * [phx.new] Allow ID to be assigned in flash component
+  * [phx.new] Add `--adapter` flag for generating application with bandit
+  * [phx.routes] Support `--method` option
 
 ## 1.7.7 (2023-07-10)
 
