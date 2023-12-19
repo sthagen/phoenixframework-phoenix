@@ -38,16 +38,16 @@ defmodule <%= @web_namespace %>.MixProject do
     [
       <%= @phoenix_dep %>,<%= if @ecto do %>
       {:phoenix_ecto, "~> 4.4"},<% end %><%= if @html do %>
-      {:phoenix_html, "~> 3.3"},
+      {:phoenix_html, "~> 4.0"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.20.1"},
+      {:phoenix_live_view, "~> 0.20.2"},
       {:floki, ">= 0.30.0", only: :test},<% end %><%= if @dashboard do %>
-      {:phoenix_live_dashboard, "~> 0.8.2"},<% end %><%= if @javascript do %>
+      {:phoenix_live_dashboard, "~> 0.8.3"},<% end %><%= if @javascript do %>
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},<% end %><%= if @css do %>
       {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
-       tag: "v2.0.18",
+       tag: "v2.1.1",
        app: false,
        compile: false,
        sparse: "optimized"},<% end %>
