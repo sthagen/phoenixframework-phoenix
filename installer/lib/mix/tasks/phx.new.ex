@@ -213,13 +213,14 @@ defmodule Mix.Tasks.Phx.New do
           Mix.shell().info([:green, "* running ", :reset, "mix assets.setup"])
 
           # First compile only builders so we can install in parallel
-          cmd(project, "mix deps.compile castore #{Enum.join(builders, " ")}", false)
+          # TODO: Once we require Erlang/OTP 28, castore and jason may no longer be required
+          cmd(project, "mix deps.compile castore jason #{Enum.join(builders, " ")}", log: false)
         end
 
         tasks =
           Enum.map(builders, fn builder ->
             cmd = "mix do loadpaths --no-compile + #{builder}.install"
-            Task.async(fn -> cmd(project, cmd, false) end)
+            Task.async(fn -> cmd(project, cmd, log: false, cd: project.web_path) end)
           end)
 
         if rebar_available?() do
@@ -317,12 +318,14 @@ defmodule Mix.Tasks.Phx.New do
 
   ## Helpers
 
-  defp cmd(%Project{} = project, cmd, log? \\ true) do
+  defp cmd(%Project{} = project, cmd, opts \\ []) do
+    {log?, opts} = Keyword.pop(opts, :log, true)
+
     if log? do
       Mix.shell().info([:green, "* running ", :reset, cmd])
     end
 
-    case Mix.shell().cmd(cmd, cmd_opts(project)) do
+    case Mix.shell().cmd(cmd, opts ++ cmd_opts(project)) do
       0 -> []
       _ -> ["$ #{cmd}"]
     end
