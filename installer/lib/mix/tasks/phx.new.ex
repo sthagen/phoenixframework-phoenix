@@ -140,7 +140,9 @@ defmodule Mix.Tasks.Phx.New do
     install: :boolean,
     prefix: :string,
     mailer: :boolean,
-    adapter: :string
+    adapter: :string,
+    inside_docker_env: :boolean,
+    from_elixir_install: :boolean
   ]
 
   @reserved_app_names ~w(server table)
