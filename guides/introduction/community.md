@@ -34,6 +34,8 @@ The Security Working Group of the Erlang Ecosystem Foundation also publishes in-
 
 ## Screencasts/Courses
 
+  * [Learn Phoenix LiveView (by George Arrowsmith - 2024)](https://phoenixliveview.com)
+
   * [Phoenix LiveView Free Course (by The Pragmatic Studio - 2023)](https://pragmaticstudio.com/courses/phoenix-liveview)
 
   * [Build It With Phoenix video course (by Geoffrey Lessel - 2023)](https://builditwithphoenix.com)
