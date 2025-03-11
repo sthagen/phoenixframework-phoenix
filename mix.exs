@@ -159,12 +159,13 @@ defmodule Phoenix.MixProject do
       "guides/ecto.md",
       "guides/contexts.md",
       "guides/json_and_apis.md",
-      "guides/scopes.md",
       "guides/mix_tasks.md",
       "guides/telemetry.md",
       "guides/asset_management.md",
-      "guides/authentication/mix_phx_gen_auth.md",
-      "guides/authentication/api_authentication.md",
+      "guides/authn_authz/authn_authz.md",
+      "guides/authn_authz/mix_phx_gen_auth.md",
+      "guides/authn_authz/scopes.md",
+      "guides/authn_authz/api_authentication.md",
       "guides/real_time/channels.md",
       "guides/real_time/presence.md",
       "guides/testing/testing.md",
@@ -173,8 +174,8 @@ defmodule Phoenix.MixProject do
       "guides/testing/testing_channels.md",
       "guides/deployment/deployment.md",
       "guides/deployment/releases.md",
-      "guides/deployment/gigalixir.md",
       "guides/deployment/fly.md",
+      "guides/deployment/gigalixir.md",
       "guides/deployment/heroku.md",
       "guides/howto/custom_error_pages.md",
       "guides/howto/file_uploads.md",
@@ -189,7 +190,7 @@ defmodule Phoenix.MixProject do
     [
       Introduction: ~r/guides\/introduction\/.?/,
       Guides: ~r/guides\/[^\/]+\.md/,
-      Authentication: ~r/guides\/authentication\/.?/,
+      "Authn and Authz": ~r/guides\/authn_authz\/.?/,
       "Real-time": ~r/guides\/real_time\/.?/,
       Testing: ~r/guides\/testing\/.?/,
       Deployment: ~r/guides\/deployment\/.?/,
@@ -249,7 +250,7 @@ defmodule Phoenix.MixProject do
 
   defp generate_js_docs(_) do
     Mix.Task.run("app.start")
-    System.cmd("npm", ["run", "docs"], cd: "assets")
+    System.cmd("npm", ["run", "docs"])
   end
 
   defp raise_on_archive_build(_) do
