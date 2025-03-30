@@ -21,7 +21,7 @@ defmodule <%= @web_namespace %>.Layouts do
         </a>
       </div>
       <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4">
+        <ul class="flex flex-column px-1 space-x-4 items-center">
           <li>
             <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
           </li>
@@ -29,7 +29,7 @@ defmodule <%= @web_namespace %>.Layouts do
             <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
           </li><%= if @css do %>
           <li>
-            <.theme_switcher />
+            <.theme_toggle />
           </li><% end %>
           <li>
             <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
@@ -41,7 +41,7 @@ defmodule <%= @web_namespace %>.Layouts do
     </header>
 
     <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl">
+      <div class="mx-auto max-w-2xl space-y-4">
         {render_slot(@inner_block)}
       </div>
     </main>
@@ -91,38 +91,30 @@ defmodule <%= @web_namespace %>.Layouts do
       </.flash>
     </div>
     """
-  end
+  end<%= if @css do %>
 
-  # Example daisyUI theme switcher, powered by a theme switcher script
-  # included in layouts/root.html.heex.
-  def theme_switcher(assigns) do
+  @doc """
+  Provides dark vs light theme toggle based on themes defined in main.css.
+
+  See <head> in root.html.heex which applies the theme before page load.
+  """
+  def theme_toggle(assigns) do
     ~H"""
-    <div class="dropdown dropdown-end">
-      <div tabindex="0" role="button" class="btn">
-        Theme
-        <span aria-hidden="true" class="text-xs font-normal">
-          <.icon class="size-4" name="hero-chevron-down-micro" />
-        </span>
-      </div>
-      <ul
-        tabindex="0"
-        class="dropdown-content menu bg-base-100 flex flex-row rounded-field z-1 w-52 mt-2 shadow-sm h-64 overflow-y-scroll"
-      >
-        <li
-          :for={
-            theme <-
-              ~w(system light dark abyss acid aqua autumn black bumblebee business caramellatte cmyk coffee) ++
-                ~w(corporate cupcake cyberpunk dark dim dracula emerald fantasy forest garden halloween) ++
-                ~w(lemonade lofi luxury night nord pastel retro silk sunset synthwave valentine winter wireframe)
-          }
-          class="w-full"
-        >
-          <a class="capitalize" phx-click={JS.dispatch("phx:set-theme", detail: %{theme: theme})}>
-            {theme}
-          </a>
-        </li>
-      </ul>
+    <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
+      <div class="absolute w-[33%] h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-[33%] [[data-theme=dark]_&]:left-[66%] transition-[left]" />
+
+      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})} class="flex p-2">
+        <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
+      </button>
+
+      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})} class="flex p-2">
+        <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
+      </button>
+
+      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "dark"})} class="flex p-2">
+        <.icon name="hero-moon-micro" class="size-4 opacity-75 hover:opacity-100" />
+      </button>
     </div>
     """
-  end
+  end<% end %>
 end

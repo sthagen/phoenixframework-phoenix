@@ -12,31 +12,23 @@
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
     </script><%= if @css do %>
     <script>
-      // Code that enables theme switcher. Must be loaded early.
       (() => {
-        const handleTheme = (theme) => {
-          if (!theme || theme === "system") {
-            window.localStorage.removeItem("theme")
-            document.documentElement.removeAttribute("data-theme", theme);
-            return;
+        const setTheme = (theme) => {
+          if (theme === "system") {
+            localStorage.removeItem("phx:theme");
+            document.documentElement.removeAttribute("data-theme");
+          } else {
+            localStorage.setItem("phx:theme", theme);
+            document.documentElement.setAttribute("data-theme", theme);
           }
-          window.localStorage.setItem("theme", theme)
-          document.documentElement.setAttribute("data-theme", theme);
-        }
-
-        handleTheme(localStorage.getItem("theme"));
-
-        window.addEventListener('storage', (e) => {
-          e.key === "theme" && handleTheme(e.newValue);
-        });
-
-        window.addEventListener("phx:set-theme", ({ detail: { theme }}) => {
-          handleTheme(theme);
-        });
+        };
+        setTheme(localStorage.getItem("phx:theme") || "system");
+        window.addEventListener("storage", (e) => e.key === "phx:theme" && setTheme(e.newValue || "system"));
+        window.addEventListener("phx:set-theme", ({ detail: { theme } }) => setTheme(theme));
       })();
     </script><% end %>
   </head>
-  <body class="bg-base-100">
+  <body>
     {@inner_content}
   </body>
 </html>
