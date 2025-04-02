@@ -6,7 +6,7 @@ end
 defmodule Phx.New.MixProject do
   use Mix.Project
 
-  @version "1.8.0-dev"
+  @version "1.8.0-rc.0"
   @scm_url "https://github.com/phoenixframework/phoenix"
 
   # If the elixir requirement is updated, we need to update:
@@ -68,7 +68,6 @@ defmodule Phx.New.MixProject do
 
   defp aliases do
     [
-      compile: [&copy_core_components/1, "compile"],
       "hex.publish": [&copy_core_components/1, "hex.publish"]
     ]
   end
