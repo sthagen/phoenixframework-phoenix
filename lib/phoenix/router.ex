@@ -854,12 +854,40 @@ defmodule Phoenix.Router do
   Defines a list of plugs (and pipelines) to send the connection through.
 
   Plugs are specified using the atom name of any imported 2-arity function
-  which takes a `%Plug.Conn{}` and options and returns a `%Plug.Conn{}`; for
+  which takes a `Plug.Conn` and options and returns a `Plug.Conn`. For
   example, `:require_authenticated_user`.
 
-  Pipelines are defined in the router; see `pipeline/2` for more information.
+  Pipelines are defined in the router, see `pipeline/2` for more information.
 
-      pipe_through [:my_imported_function, :my_pipeline]
+      pipe_through [:require_authenticated_user, :my_browser_pipeline]
+
+  ## Multiple invocations
+
+  `pipe_through/1` can be invoked multiple times within the same scope. Each
+  invocation appends new plugs and pipelines to run, which are applied to all
+  routes **after** the `pipe_through/1` invocation. For example:
+
+      scope "/" do
+        pipe_through [:browser]
+        get "/", HomeController, :index
+
+        pipe_through [:require_authenticated_user]
+        get "/settings", UserController, :edit
+      end
+
+  In the example above, `/` pipes through `browser` only, while `/settings` pipes
+  through both `browser` and `require_authenticated_user`. Therefore, to avoid
+  confusion, we recommend a single `pipe_through` at the top of each scope:
+
+      scope "/" do
+        pipe_through [:browser]
+        get "/", HomeController, :index
+      end
+
+      scope "/" do
+        pipe_through [:browser, :require_authenticated_user]
+        get "/settings", UserController, :edit
+      end
   """
   defmacro pipe_through(pipes) do
     pipes =
