@@ -89,28 +89,27 @@ defmodule <%= @web_namespace %>.CoreComponents do
       <.button navigate={~p"/"}>Home</.button>
   """
   attr :rest, :global, include: ~w(href navigate patch method download name value)
+  attr :class, :string
   attr :variant, :string, values: ~w(primary)
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do
     variants = %{"primary" => "btn-primary", nil => "btn-primary btn-soft"}
 
-    default_class =
-      Map.get_lazy(assigns.rest, :class, fn ->
-        Map.fetch!(variants, assigns[:variant])
+    assigns =
+      assign_new(assigns, :class, fn ->
+        ["btn", Map.fetch!(variants, assigns[:variant])]
       end)
-
-    assigns = assign(assigns, :class, default_class)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
       ~H"""
-      <.link class={["btn", @class, @rest[:class]]} {@rest}>
+      <.link class={@class} {@rest}>
         {render_slot(@inner_block)}
       </.link>
       """
     else
       ~H"""
-      <button class={["btn", @class, @rest[:class]]} {@rest}>
+      <button class={@class} {@rest}>
         {render_slot(@inner_block)}
       </button>
       """
@@ -186,7 +185,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
       end)
 
     ~H"""
-    <fieldset class="fieldset mb-2">
+    <div class="fieldset mb-2">
       <label>
         <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
         <span class="label">
@@ -202,13 +201,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
         </span>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </fieldset>
+    </div>
     """
   end
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <fieldset class="fieldset mb-2">
+    <div class="fieldset mb-2">
       <label>
         <span :if={@label} class="label mb-1">{@label}</span>
         <select
@@ -223,13 +222,13 @@ defmodule <%= @web_namespace %>.CoreComponents do
         </select>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </fieldset>
+    </div>
     """
   end
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <fieldset class="fieldset mb-2">
+    <div class="fieldset mb-2">
       <label>
         <span :if={@label} class="label mb-1">{@label}</span>
         <textarea
@@ -243,14 +242,14 @@ defmodule <%= @web_namespace %>.CoreComponents do
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </fieldset>
+    </div>
     """
   end
 
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <fieldset class="fieldset mb-2">
+    <div class="fieldset mb-2">
       <label>
         <span :if={@label} class="label mb-1">{@label}</span>
         <input
@@ -266,7 +265,7 @@ defmodule <%= @web_namespace %>.CoreComponents do
         />
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </fieldset>
+    </div>
     """
   end
 
