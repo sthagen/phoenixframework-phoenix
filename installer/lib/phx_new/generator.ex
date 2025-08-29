@@ -125,7 +125,7 @@ defmodule Phx.New.Generator do
           @new_project_rules_files["phoenix.md"],
           # --no-assets is equivalent to --no-tailwind && --no-esbuild;
           # we check for both here
-          project.binding[:esbuild] && project.binding[:tailwind] &&
+          project.binding[:javascript] && project.binding[:css] &&
             @new_project_rules_files["assets.md"],
           # generic usage rules
           "\n<!-- usage-rules-start -->",
@@ -160,7 +160,7 @@ defmodule Phx.New.Generator do
           "<!-- usage-rules-end -->"
         ]
         |> Enum.reject(fn part -> part == nil or part == false end)
-        |> Enum.intersperse("\n")
+        |> Enum.intersperse("\n\n")
 
       File.write!(Path.join(project.project_path, "AGENTS.md"), content)
     end
