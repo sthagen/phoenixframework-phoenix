@@ -126,7 +126,7 @@ We generated a new resource inside our `ShoppingCart` named `CartItem`. This sch
 -     add :product_id, references(:products, on_delete: :nothing)
 +     add :product_id, references(:products, on_delete: :delete_all)
 
-      timestamps()
+      timestamps(type: :utc_datetime)
     end
 
 -   create index(:cart_items, [:cart_id])
@@ -172,7 +172,7 @@ Now that we know where our data dependencies exist, let's add our schema associa
 +   belongs_to :user, Hello.Accounts.User
 +   has_many :items, Hello.ShoppingCart.CartItem
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 ```
 
@@ -188,7 +188,7 @@ Now that our cart is associated to the items we place in it, let's set up the ca
 +   belongs_to :cart, Hello.ShoppingCart.Cart
 +   belongs_to :product, Hello.Catalog.Product
 
-    timestamps()
+    timestamps(type: :utc_datetime)
   end
 
   @doc false
@@ -316,7 +316,7 @@ defmodule HelloWeb.CartItemController do
 end
 ```
 
-We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we call a `ShoppingCart.add_item_to_cart/2` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec out our web layer and context APIs without thinking about all the implementation details at once.
+We defined a new `CartItemController` with the create and delete actions that we declared in our router. For `create`, we call a `ShoppingCart.add_item_to_cart/3` function which we'll implement in a moment. If successful, we show a flash successful message and redirect to the cart show page; else, we show a flash error message and redirect to the cart show page. For `delete`, we'll call a `remove_item_from_cart` function which we'll implement on our `ShoppingCart` context  and then redirect back to the cart show page. We haven't implemented these two shopping cart functions yet, but notice how their names scream their intent: `add_item_to_cart` and `remove_item_from_cart` make it obvious what we are accomplishing here. It also allows us to spec out our web layer and context APIs without thinking about all the implementation details at once.
 
 Let's implement the new interface for the `ShoppingCart` context API in `lib/hello/shopping_cart.ex`:
 
@@ -544,7 +544,7 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
     |> Ecto.Multi.delete_all(:discarded_items, fn %{cart: cart} ->
       from(i in CartItem, where: i.cart_id == ^cart.id and i.quantity == 0)
     end)
-    |> Repo.transaction()
+    |> Repo.transact()
     |> case do
       {:ok, %{cart: cart}} ->
         broadcast(scope, {:updated, cart})
@@ -558,6 +558,6 @@ Head back over to your shopping cart context in `lib/hello/shopping_cart.ex` and
 
 We started much like how our out-of-the-box code started – we take the cart struct and cast the user input to a cart changeset, except this time we use `Ecto.Changeset.cast_assoc/3` to cast the nested item data into `CartItem` changesets. Remember the [`<.inputs_for />`](https://hexdocs.pm/phoenix_live_view/Phoenix.Component.html#inputs_for/1) call in our cart form template? That hidden ID data is what allows Ecto's `cast_assoc` to map item data back to existing item associations in the cart. Next we use `Ecto.Multi.new/0`, which you may not have seen before. Ecto's `Multi` is a feature that allows lazily defining a chain of named operations to eventually execute inside a database transaction. Each operation in the multi chain receives the values from the previous steps and executes until a failed step is encountered. When an operation fails, the transaction is rolled back and an error is returned, otherwise the transaction is committed.
 
-For our multi operations, we start by issuing an update of our cart, which we named `:cart`. After the cart update is issued, we perform a multi `delete_all` operation, which takes the updated cart and applies our zero-quantity logic. We prune any items in the cart with zero quantity by returning an ecto query that finds all cart items for this cart with an empty quantity. Calling `Repo.transaction/1` with our multi will execute the operations in a new transaction and we return the success or failure result to the caller just like the original function.
+For our multi operations, we start by issuing an update of our cart, which we named `:cart`. After the cart update is issued, we perform a multi `delete_all` operation, which takes the updated cart and applies our zero-quantity logic. We prune any items in the cart with zero quantity by returning an ecto query that finds all cart items for this cart with an empty quantity. Calling `Repo.transact/1` with our multi will execute the operations in a new transaction and we return the success or failure result to the caller just like the original function.
 
 Let's head back to the browser and try it out. Add a few products to your cart, update the quantities, and watch the values changes along with the price calculations. Setting any quantity to 0 will also remove the item. You can also try logging out and registering a new user to see how the carts are scoped to the current user. Pretty neat!
