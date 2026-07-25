@@ -1462,7 +1462,7 @@ var Phoenix = (() => {
         if (this.hasLogger()) {
           this.log("transport", "heartbeat timeout. Attempting to re-establish connection");
         }
-        this.triggerChanError();
+        this.triggerChanError("heartbeat_timeout");
         this.closeWasClean = false;
         this.teardown(() => this.reconnectTimer.scheduleTimeout(), WS_CLOSE_NORMAL, "heartbeat timeout");
       }
@@ -1525,7 +1525,7 @@ var Phoenix = (() => {
       };
       let closeCode = event && event.code;
       if (this.hasLogger()) this.log("transport", "close", event);
-      this.triggerChanError();
+      this.triggerChanError("connection_closed");
       this.clearHeartbeats();
       if (!this.closeWasClean && closeCode !== 1e3) {
         this.reconnectTimer.scheduleTimeout();
@@ -1543,16 +1543,16 @@ var Phoenix = (() => {
         callback(error, transportBefore, establishedBefore);
       });
       if (transportBefore === this.transport || establishedBefore > 0) {
-        this.triggerChanError();
+        this.triggerChanError("connection_error");
       }
     }
     /**
      * @private
      */
-    triggerChanError() {
+    triggerChanError(reason) {
       this.channels.forEach((channel) => {
         if (!(channel.isErrored() || channel.isLeaving() || channel.isClosed())) {
-          channel.trigger(CHANNEL_EVENTS.error);
+          channel.trigger(CHANNEL_EVENTS.error, { source: "transport", reason });
         }
       });
     }
