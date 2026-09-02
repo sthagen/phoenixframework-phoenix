@@ -25,11 +25,11 @@ defmodule Phoenix.Socket do
 
   Socket handlers are mounted in Endpoints and must define two callbacks:
 
-    * `connect/3` - receives the socket params, connection info if any, and
+    * `c:connect/3` - receives the socket params, connection info if any, and
       authenticates the connection. Must return a `Phoenix.Socket` struct,
       often with custom assigns
 
-    * `id/1` - receives the socket returned by `connect/3` and returns the
+    * `c:id/1` - receives the socket returned by `c:connect/3` and returns the
       id of this connection as a string. The `id` is used to identify socket
       connections, often to a particular user, allowing us to force disconnections.
       For sockets requiring no authentication, `nil` can be returned
@@ -225,7 +225,7 @@ defmodule Phoenix.Socket do
               {:ok, Socket.t()} | {:error, term} | :error
 
   @doc """
-  Shortcut version of `connect/3` which does not receive `connect_info`.
+  Shortcut version of `c:connect/3` which does not receive `connect_info`.
 
   Provided for backwards compatibility.
   """
@@ -791,8 +791,8 @@ defmodule Phoenix.Socket do
     %{topic: topic, join_ref: join_ref} = msg
 
     case state.channels_inverse do
-      # we need to match on nil to handle v1 protocol
-      %{^pid => {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
+      %{^pid => {^topic, existing_join_ref}}
+      when is_nil(join_ref) or join_ref === existing_join_ref ->
         send(pid, msg)
         {:ok, {update_channel_status(state, pid, topic, :leaving), socket}}
 
@@ -806,8 +806,11 @@ defmodule Phoenix.Socket do
     %{topic: topic, join_ref: join_ref} = msg
 
     case state.channels_inverse do
-      # we need to match on nil to handle v1 protocol
-      %{^pid => {^topic, existing_join_ref}} when existing_join_ref in [join_ref, nil] ->
+      # a nil join_ref is valid on non-join messages;
+      # phoenix.js also sends it on each message, but the protocol does not
+      # require it. Also, v1 protocol clients may send nil.
+      %{^pid => {^topic, existing_join_ref}}
+      when is_nil(join_ref) or join_ref === existing_join_ref ->
         send(pid, msg)
         {:ok, {state, socket}}
 

@@ -3,6 +3,10 @@ on: [push, pull_request]
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   mix_test:
     name: mix test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
@@ -20,15 +24,18 @@ jobs:
           - elixir: "1.18.4"
             otp: "27.3.4.13"
 
-          - elixir: "1.20.2"
-            otp: "29.0.3"
+          - elixir: "1.20.4"
+            otp: "29.0.5"
             lint: true
 
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
@@ -58,6 +65,11 @@ jobs:
 
       - name: Run tests
         run: mix test
+        if: ${{ !matrix.lint }}
+
+      - name: Run tests & lint
+        run: mix test --warnings-as-errors
+        if: ${{ matrix.lint }}
 
   installer_test:
     name: installer test (OTP ${{matrix.otp}} | Elixir ${{matrix.elixir}})
@@ -69,17 +81,20 @@ jobs:
     strategy:
       matrix:
         include:
-          - elixir: "1.17.3"
-            otp: "25.3.2.21"
+          - elixir: "1.18.4"
+            otp: "27.3.4.3"
 
-          - elixir: "1.20.2"
-            otp: "29.0.3"
+          - elixir: "1.20.4"
+            otp: "29.0.5"
 
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Elixir
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
@@ -114,9 +129,12 @@ jobs:
   npm_test:
     name: npm test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Restore deps and _build cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -147,39 +165,113 @@ jobs:
       - name: Run tests
         run: npm test
 
-  integration-test-elixir:
-    runs-on: ubuntu-latest
+  docs:
+    name: mix docs
+
+    env:
+      MIX_ENV: docs
 
     strategy:
       matrix:
         include:
-          # look for latest alpine image here: https://bob.hex.pm/docker
-          - elixir: "1.17.3"
-            otp: "25.3.2.21"
-            suffix: "alpine-3.22.4"
+          - elixir: "1.20.4"
+            otp: "29.0.5"
 
-          - elixir: "1.20.2"
-            otp: "29.0.3"
-            suffix: "alpine-3.24.1"
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Elixir
+        uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1.24.1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      # the docs alias also builds the JavaScript documentation with npm
+      - name: Set up Node.js 24.x
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+
+      - name: Restore deps and _build cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            deps
+            _build
+          key: docs-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}-${{ hashFiles('**/mix.lock') }}
+          restore-keys: |
+            docs-${{ runner.os }}-${{ matrix.otp }}-${{ matrix.elixir }}
+
+      - name: Restore npm cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: mix deps.get --only docs
+
+      - name: Build the documentation
+        run: mix docs --warnings-as-errors
+
+  integration-test-elixir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    strategy:
+      matrix:
+        include:
+          # look for latest alpine image here: https://bob.hex.pm/docker?repo=hexpm/elixir&os=alpine&sort=elixir_version,erlang_version,os_version
+          - elixir: "1.18.4"
+            otp: "27.3.4.3"
+            alpine: "3.22.4"
+
+          - elixir: "1.20.4"
+            otp: "29.0.5"
+            alpine: "3.23.5"
 
     container:
-      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-${{ matrix.suffix }}
+      image: hexpm/elixir:${{ matrix.elixir }}-erlang-${{ matrix.otp }}-alpine-${{ matrix.alpine }}
       env:
         ELIXIR_ASSERT_TIMEOUT: 10000
         PHX_CI: true
+        # Set to half of the runner vCPU cores to compile deps/NIFs
+        # concurrently across OS processes without CPU oversubscription.
+        # See https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
+        # and https://elixir-lang.org/blog/2025/10/16/elixir-v1-19-0-released/
+        MIX_OS_DEPS_COMPILE_PARTITION_COUNT: 2
+        MAKEFLAGS: "-j2"
     services:
       postgres:
-        image: postgres
+        image: postgres:18
         ports:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 10
       mysql:
-        image: mysql
+        image: mysql:26
         ports:
           - 3306:3306
         env:
           MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 10
       mssql:
         image: mcr.microsoft.com/mssql/server:2019-latest
         env:
@@ -187,7 +279,44 @@ jobs:
           SA_PASSWORD: some!Password
         ports:
           - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -C -Q 'SELECT 1' 2>/dev/null || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$SA_PASSWORD\" -Q 'SELECT 1' 2>/dev/null"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 25
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Run test script
-        run: ./integration_test/test.sh
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install system packages
+        run: apk add --no-progress --update git socat make gcc libc-dev cmake g++
+
+      - name: Set up Hex and Rebar
+        run: |
+          mix local.rebar --force
+          mix local.hex --force
+
+      - name: Start database proxy bridges
+        run: |
+          socat TCP-LISTEN:5432,fork TCP-CONNECT:postgres:5432 > /dev/null 2>&1 &
+          socat TCP-LISTEN:3306,fork TCP-CONNECT:mysql:3306 > /dev/null 2>&1 &
+          socat TCP-LISTEN:1433,fork TCP-CONNECT:mssql:1433 > /dev/null 2>&1 &
+
+      - name: Fetch dependencies
+        working-directory: integration_test
+        run: mix deps.get
+
+      - name: Compile dependencies
+        working-directory: integration_test
+        run: mix deps.compile
+        env:
+          MIX_ENV: test
+
+      - name: Run integration tests
+        working-directory: integration_test
+        run: |
+          mix test --include database \
+            --formatter ExUnit.CLIFormatter \
+            --formatter Phoenix.Integration.SummaryFormatter

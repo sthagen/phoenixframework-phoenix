@@ -518,12 +518,21 @@ var Ajax = class {
       body
     };
     let controller = null;
+    let timeoutId = null;
     if (timeout) {
       controller = new AbortController();
-      const _timeoutId = setTimeout(() => controller.abort(), timeout);
+      timeoutId = setTimeout(() => controller.abort(), timeout);
       options.signal = controller.signal;
     }
-    global.fetch(endPoint, options).then((response) => response.text()).then((data) => this.parseJSON(data)).then((data) => callback && callback(data)).catch((err) => {
+    global.fetch(endPoint, options).then((response) => response.text()).then((data) => this.parseJSON(data)).then((data) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      callback && callback(data);
+    }).catch((err) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
       if (err.name === "AbortError" && ontimeout) {
         ontimeout();
       } else {
@@ -1093,7 +1102,6 @@ var Socket = class {
     this.disconnecting = false;
     this.binaryType = opts.binaryType || "arraybuffer";
     this.connectClock = 1;
-    this.pageHidden = false;
     if (this.transport !== LongPoll) {
       this.encode = opts.encode || this.defaultEncoder;
       this.decode = opts.decode || this.defaultDecoder;
@@ -1116,14 +1124,10 @@ var Socket = class {
         }
       });
       phxWindow.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "hidden") {
-          this.pageHidden = true;
-        } else {
-          this.pageHidden = false;
-          if (!this.isConnected() && !this.closeWasClean) {
-            this.teardown(() => this.connect());
-          }
-        }
+        this.handleVisibilityChange();
+      });
+      phxWindow.document && phxWindow.document.addEventListener("resume", () => {
+        this.handleVisibilityChange();
       });
     }
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs || 3e4;
@@ -1163,6 +1167,22 @@ var Socket = class {
       this.teardown(() => this.connect());
     }, this.reconnectAfterMs);
     this.authToken = opts.authToken && closure(opts.authToken);
+  }
+  /**
+   * @internal
+   */
+  get pageHidden() {
+    return phxWindow && phxWindow.document ? phxWindow.document.visibilityState === "hidden" : false;
+  }
+  /**
+   * @internal
+   */
+  handleVisibilityChange() {
+    if (!this.pageHidden) {
+      if (!this.isConnected() && !this.closeWasClean) {
+        this.teardown(() => this.connect());
+      }
+    }
   }
   /**
    * Returns the LongPoll transport reference
